@@ -247,36 +247,28 @@ async function handleRequest(request, response) {
       const targetDir = await ensureBackupDirectory(requestedDir || activeBackupDir);
       activeBackupDir = targetDir;
       const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
       const dateStr = now.toISOString().slice(0, 10);
       const monthStr = dateStr.slice(0, 7);
       const yearStr = dateStr.slice(0, 4);
+      const timeStr = `${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
 
       let targetFileName;
       let fileContents = typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot, null, 2);
+      let fileRegex;
 
       if (type === 'every-minute' || type === '1min') {
-        targetFileName = 'lab-backup-1min.json';
-        try {
-          const allFiles = await readdir(targetDir);
-          const prev = allFiles.filter(f => /^lab-backup-1min.*\.json$/.test(f) && f !== targetFileName);
-          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
-        } catch {}
+        targetFileName = `lab-backup-1min-${dateStr}_${timeStr}.json`;
+        fileRegex = /^lab-backup-1min.*\.json$/i;
       } else if (type === 'yearly') {
-        targetFileName = `lab-backup-yearly-${yearStr}.json`;
-        try {
-          const allFiles = await readdir(targetDir);
-          const prev = allFiles.filter(f => /^lab-backup-yearly-.*\.json$/.test(f) && f !== targetFileName);
-          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
-        } catch {}
+        targetFileName = `lab-backup-yearly-${yearStr}_${dateStr}_${timeStr}.json`;
+        fileRegex = /^lab-backup-yearly.*\.json$/i;
       } else if (type === 'monthly') {
-        targetFileName = `lab-backup-monthly-${monthStr}.json`;
-        try {
-          const allFiles = await readdir(targetDir);
-          const prev = allFiles.filter(f => /^lab-backup-monthly-.*\.json$/.test(f) && f !== targetFileName);
-          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
-        } catch {}
+        targetFileName = `lab-backup-monthly-${monthStr}_${dateStr}_${timeStr}.json`;
+        fileRegex = /^lab-backup-monthly.*\.json$/i;
       } else if (type === 'patient-wise') {
-        targetFileName = 'lab-backup-patients.json';
+        targetFileName = `lab-backup-patients-${dateStr}_${timeStr}.json`;
+        fileRegex = /^lab-backup-patients.*\.json$/i;
         try {
           const parsed = typeof snapshot === 'string' ? JSON.parse(snapshot) : snapshot;
           const patientWiseData = {
@@ -305,23 +297,19 @@ async function handleRequest(request, response) {
           };
           fileContents = JSON.stringify(patientWiseData, null, 2);
         } catch {}
-        try {
-          const allFiles = await readdir(targetDir);
-          const prev = allFiles.filter(f => /^lab-backup-patients.*\.json$/.test(f) && f !== targetFileName);
-          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
-        } catch {}
       } else {
         // Daily backup
-        targetFileName = `lab-backup-daily-${dateStr}.json`;
-        try {
-          const allFiles = await readdir(targetDir);
-          const prev = allFiles.filter(f => /^lab-backup-daily-.*\.json$/.test(f) && f !== targetFileName);
-          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
-        } catch {}
+        targetFileName = `lab-backup-daily-${dateStr}_${timeStr}.json`;
+        fileRegex = /^lab-backup-daily.*\.json$/i;
       }
 
       const fullFilePath = join(targetDir, targetFileName);
       await writeFile(fullFilePath, fileContents, 'utf8');
+
+      // Keep strictly the last two backups and remove all previous backups
+      if (fileRegex) {
+        await cleanOldBackupsKeepingTwo(targetDir, fileRegex, targetFileName);
+      }
 
       // Also persist latest snapshot to backend/lab-data/database.json
       try {
