@@ -23,15 +23,25 @@ node backend/server.mjs
 
 Then open `http://127.0.0.1:3000/` in the browser and enter the temporary password. The local server binds to loopback only, reads the signing key from `backend/license-private-key.txt`, and does not require an internet service or database. Keep the signing key private.
 
-## Host the generator online
+## Host the generator online (Render.com)
 
-The generator page is a single HTML file, but signed keys must be created by the Node.js backend so the private signing key is never sent to the browser. Deploy the `backend` folder to a Node.js 20+ host and use `npm start` as the start command. Configure these environment variables in the host's secret settings:
+The generator page is served by the Node.js backend so the private signing key is never sent to the browser.
 
-- `NODE_ENV=production` (the server then listens on `0.0.0.0`; or set `HOST=0.0.0.0` explicitly)
-- `LICENSE_ADMIN_TOKEN` = a strong, unique admin password
-- `LICENSE_PRIVATE_KEY_BASE64` = the contents of `backend/license-private-key.txt`
+### Render.com Setup Checklist:
 
-Use the host's HTTPS URL to open the generator. Do not put the private key or admin password in the HTML, source control, or a public static-site host. Keep access restricted to trusted administrators; anyone with the admin password can issue licenses.
+1. **Service Type**: Web Service (Node environment)
+2. **Root Directory**: `backend` *(CRITICAL: If you leave this blank, Render runs the root Electron project and crashes!)*
+3. **Build Command**: `npm install`
+4. **Start Command**: `npm start`
+5. **Environment Variables** (Add these in Render Dashboard -> **Environment Variables**):
+   - `NODE_ENV` = `production`
+   - `LICENSE_ADMIN_TOKEN` = `<Your chosen generator password>`
+   - `LICENSE_PRIVATE_KEY_BASE64` = *(Copy the entire text from `backend/license-private-key.txt`)*
+
+> [!IMPORTANT]
+> Because `backend/license-private-key.txt` is in `.gitignore`, Git **never** pushes it to GitHub. You **must** manually copy the key text into `LICENSE_PRIVATE_KEY_BASE64` in Render's dashboard!
+
+6. **Health Check Path**: `/health` (or `/`)
 
 Alternatively, replace the device ID and expiry in this command:
 

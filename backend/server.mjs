@@ -9,6 +9,9 @@ const MAX_BODY_BYTES = 4096;
 
 function json(response, status, body) {
   response.writeHead(status, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Cache-Control': 'no-store',
     'Content-Type': 'application/json; charset=utf-8',
     'X-Content-Type-Options': 'nosniff'
@@ -38,6 +41,20 @@ function constantTimeEqual(left, right) {
   const leftBytes = Buffer.from(left);
   const rightBytes = Buffer.from(right);
   return leftBytes.length === rightBytes.length && timingSafeEqual(leftBytes, rightBytes);
+}
+
+function parsePrivateKey(keyInput) {
+  const clean = (keyInput || '').trim().replace(/^["']|["']$/g, '');
+  if (clean.includes('-----BEGIN')) {
+    return createPrivateKey(clean);
+  }
+  try {
+    const decoded = Buffer.from(clean, 'base64').toString('utf8');
+    if (decoded.includes('-----BEGIN')) {
+      return createPrivateKey(decoded);
+    }
+  } catch {}
+  return createPrivateKey(clean);
 }
 
 function createTicket(licenseId, deviceId, expiresAt, issuedTo, contact, issuedAt, licenseType, privateKey) {
@@ -82,6 +99,17 @@ async function readJson(request) {
 async function handleRequest(request, response) {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
 
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204, {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Max-Age': '86400'
+    });
+    response.end();
+    return;
+  }
+
   if (request.method === 'GET' && url.pathname === '/health') {
     json(response, 200, { available: true });
     return;
@@ -99,23 +127,43 @@ async function handleRequest(request, response) {
   }
 
   const adminToken = process.env.LICENSE_ADMIN_TOKEN;
+  if (!adminToken) {
+    json(response, 500, {
+      error: 'LICENSE_ADMIN_TOKEN is not set in Render environment variables. Please add LICENSE_ADMIN_TOKEN in your Render dashboard.'
+    });
+    return;
+  }
+
   const authHeader = request.headers.authorization || '';
   const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!adminToken || !constantTimeEqual(suppliedToken, adminToken)) {
+  if (!constantTimeEqual(suppliedToken, adminToken)) {
     json(response, 401, { error: 'Admin token is incorrect.' });
     return;
   }
 
-  let privateKeyBase64 = process.env.LICENSE_PRIVATE_KEY_BASE64;
-  if (!privateKeyBase64) {
+  let privateKeyRaw = process.env.LICENSE_PRIVATE_KEY_BASE64;
+  if (!privateKeyRaw) {
     try {
-      privateKeyBase64 = (await readFile(join(directory, 'license-private-key.txt'), 'utf8')).trim();
+      privateKeyRaw = (await readFile(join(directory, 'license-private-key.txt'), 'utf8')).trim();
     } catch (error) {
       if (error.code !== 'ENOENT') throw error;
     }
   }
-  if (!privateKeyBase64) {
-    json(response, 503, { error: 'License signing is not configured on the server.' });
+  if (!privateKeyRaw) {
+    json(response, 503, {
+      error: 'LICENSE_PRIVATE_KEY_BASE64 is not set in Render environment variables. Copy the contents of backend/license-private-key.txt to your Render environment variables.'
+    });
+    return;
+  }
+
+  let privateKey;
+  try {
+    privateKey = parsePrivateKey(privateKeyRaw);
+  } catch (keyError) {
+    console.error('Private key loading error:', keyError);
+    json(response, 500, {
+      error: `Server private key configuration error: ${keyError.message}`
+    });
     return;
   }
 
@@ -199,7 +247,7 @@ async function handleRequest(request, response) {
     contact,
     issuedAt,
     licenseType,
-    createPrivateKey(Buffer.from(privateKeyBase64, 'base64').toString('utf8'))
+    privateKey
   );
   const legacyKey = `LAB1-${Buffer.from(JSON.stringify(ticket)).toString('base64url')}`;
 
@@ -233,7 +281,8 @@ const server = createServer((request, response) => {
 });
 
 const port = Number(process.env.PORT || 3000);
-const host = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
+// Render injects PORT (e.g. 10000). Always bind to 0.0.0.0 in cloud hosting (Render/Heroku/Railway) so public requests are routed.
+const host = process.env.HOST || (process.env.PORT || process.env.RENDER || process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
 server.listen(port, host, () => {
   console.log(`Offline license generator listening at http://${host}:${port}.`);
 });
