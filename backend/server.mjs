@@ -1,11 +1,51 @@
 import { createServer } from 'node:http';
 import { createHash, createPrivateKey, randomUUID, sign, timingSafeEqual } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = dirname(fileURLToPath(import.meta.url));
+const LICENSES_FILE = join(directory, 'issued-licenses.json');
 const MAX_BODY_BYTES = 4096;
+
+async function loadSavedLicenses() {
+  try {
+    const raw = await readFile(LICENSES_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.error('Error reading saved licenses:', error);
+    return [];
+  }
+}
+
+async function saveIssuedLicenseRecord(record) {
+  try {
+    const list = await loadSavedLicenses();
+    // Keep unique by activationKey / licenseId
+    const filtered = list.filter(item => item.activationKey !== record.activationKey);
+    filtered.unshift(record);
+    // Keep the latest 500 records
+    const trimmed = filtered.slice(0, 500);
+    await writeFile(LICENSES_FILE, JSON.stringify(trimmed, null, 2), 'utf8');
+    return trimmed;
+  } catch (error) {
+    console.error('Error saving license record:', error);
+    return [];
+  }
+}
+
+async function deleteSavedLicenseRecord(licenseId) {
+  try {
+    const list = await loadSavedLicenses();
+    const filtered = list.filter(item => item.licenseId !== licenseId && item.activationKey !== licenseId);
+    await writeFile(LICENSES_FILE, JSON.stringify(filtered, null, 2), 'utf8');
+    return filtered;
+  } catch (error) {
+    console.error('Error deleting license record:', error);
+    return [];
+  }
+}
 
 function json(response, status, body) {
   response.writeHead(status, {
@@ -95,7 +135,7 @@ async function handleRequest(request, response) {
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400'
     });
@@ -114,7 +154,7 @@ async function handleRequest(request, response) {
     return;
   }
 
-  if (request.method !== 'POST' || url.pathname !== '/api/licenses') {
+  if (!['/api/licenses', '/api/licenses/deactivate'].includes(url.pathname)) {
     json(response, 404, { error: 'Not found.' });
     return;
   }
@@ -131,6 +171,51 @@ async function handleRequest(request, response) {
   const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
   if (!constantTimeEqual(suppliedToken, adminToken)) {
     json(response, 401, { error: 'Admin token is incorrect.' });
+    return;
+  }
+
+  if (request.method === 'GET') {
+    const records = await loadSavedLicenses();
+    json(response, 200, { licenses: records });
+    return;
+  }
+
+  if (request.method === 'DELETE') {
+    const id = url.searchParams.get('id');
+    if (!id) {
+      json(response, 400, { error: 'License ID is required.' });
+      return;
+    }
+    const updated = await deleteSavedLicenseRecord(id);
+    json(response, 200, { success: true, licenses: updated });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/licenses/deactivate') {
+    const body = await readJson(request);
+    const key = body.id || body.activationKey || body.licenseId;
+    if (!key) {
+      json(response, 400, { error: 'Key is required to deactivate.' });
+      return;
+    }
+    const records = await loadSavedLicenses();
+    const updated = records.map(item => {
+      if (item.activationKey === key || item.licenseId === key) {
+        return {
+          ...item,
+          isDeactivated: true,
+          deactivatedAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+    await writeFile(LICENSES_STORAGE_PATH, JSON.stringify(updated, null, 2), 'utf8');
+    json(response, 200, { success: true, licenses: updated });
+    return;
+  }
+
+  if (request.method !== 'POST') {
+    json(response, 405, { error: 'Method not allowed.' });
     return;
   }
 
@@ -179,39 +264,48 @@ async function handleRequest(request, response) {
     json(response, 400, { error: 'Contact details must be 120 characters or fewer.' });
     return;
   }
-  if (!['new', 'renewal'].includes(licenseType)) {
-    json(response, 400, { error: 'Choose new activation or renewal.' });
+  if (!['new', 'renewal', 'deactivate'].includes(licenseType)) {
+    json(response, 400, { error: 'Choose new activation, renewal, or deactivation.' });
     return;
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)
-    || Number.isNaN(expiryDate.getTime())
-    || expiryDate.toISOString().slice(0, 10) !== expiresAt
-    || expiresAt <= new Date().toISOString().slice(0, 10)) {
-    json(response, 400, { error: 'Choose a valid expiry date in the future.' });
-    return;
+
+  const isDeactivation = licenseType === 'deactivate';
+  if (!isDeactivation) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)
+      || Number.isNaN(expiryDate.getTime())
+      || expiryDate.toISOString().slice(0, 10) !== expiresAt
+      || expiresAt <= new Date().toISOString().slice(0, 10)) {
+      json(response, 400, { error: 'Choose a valid expiry date in the future.' });
+      return;
+    }
+  } else {
+    expiresAt = new Date().toISOString().slice(0, 10);
   }
 
   const licenseId = randomUUID();
   const issuedAt = new Date().toISOString();
   
-  // Calculate days until expiry for 25-digit key
-  const nowMs = Date.now();
-  const expiryMs = expiryDate.getTime();
-  const diffDays = Math.max(1, Math.round((expiryMs - nowMs) / (1000 * 60 * 60 * 24)));
-
-  // Generate standard 25-digit key matching app verification logic
-  let durationCode = '36';
-  if (diffDays > 3000) durationCode = '99';
-  else if (diffDays > 500) durationCode = '73';
-  else if (diffDays <= 180) durationCode = '18';
-
-  let random18 = '';
-  while (random18.length < 18) {
-    const chunk = String(Math.floor(100000000 + Math.random() * 900000000));
-    random18 += chunk;
+  // Calculate exact days for 25-digit key
+  let safeDays;
+  if (isDeactivation) {
+    safeDays = 0;
+  } else if (body.customDays && Number(body.customDays) > 0) {
+    safeDays = Math.min(9999, Math.round(Number(body.customDays)));
+  } else {
+    const nowMs = Date.now();
+    const expiryMs = expiryDate.getTime();
+    safeDays = Math.max(1, Math.min(9999, Math.round((expiryMs - nowMs) / (1000 * 60 * 60 * 24))));
   }
-  random18 = random18.slice(0, 18);
-  const payload20 = durationCode + random18;
+
+  // Exact days header: '8' + 4-digit days (0 to 9999) + 15 random digits
+  const header = `8${String(safeDays).padStart(4, '0')}`;
+  let random15 = '';
+  while (random15.length < 15) {
+    const chunk = String(Math.floor(100000000 + Math.random() * 900000000));
+    random15 += chunk;
+  }
+  random15 = random15.slice(0, 15);
+  const payload20 = header + random15;
 
   // 5-digit algorithmic checksum
   let h1 = 5381;
@@ -244,18 +338,23 @@ async function handleRequest(request, response) {
   );
   const legacyKey = `LAB1-${Buffer.from(JSON.stringify(ticket)).toString('base64url')}`;
 
-  json(response, 201, {
+  const record = {
+    licenseId: formatted25Key,
     activationKey: formatted25Key,
     legacyKey,
     key25Digit: formatted25Key,
-    licenseId: formatted25Key,
     deviceId,
     issuedTo,
     contact,
     issuedAt,
     expiresAt,
-    licenseType
-  });
+    licenseType,
+    days: safeDays,
+    isDeactivated: isDeactivation
+  };
+
+  await saveIssuedLicenseRecord(record);
+  json(response, 201, record);
 }
 
 const server = createServer((request, response) => {
