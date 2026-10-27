@@ -154,6 +154,36 @@ async function handleRequest(request, response) {
     return;
   }
 
+  // Public status check for client diagnostic applications to verify deactivation status
+  if (request.method === 'GET' && url.pathname === '/api/licenses/status') {
+    const key = url.searchParams.get('key') || '';
+    const deviceId = url.searchParams.get('deviceId') || '';
+    const cleanKey = key.replace(/\D/g, '');
+    const records = await loadSavedLicenses();
+
+    const found = records.find(item => {
+      const itemClean = (item.activationKey || item.licenseId || '').replace(/\D/g, '');
+      if (cleanKey && itemClean && cleanKey === itemClean) return true;
+      if (deviceId && item.deviceId && item.deviceId.toLowerCase() === deviceId.toLowerCase()) return true;
+      return false;
+    });
+
+    if (found) {
+      const isDeactivated = Boolean(found.isDeactivated || found.licenseType === 'deactivate' || found.days === 0);
+      json(response, 200, {
+        isDeactivated,
+        active: !isDeactivated,
+        expiresAt: found.expiresAt,
+        issuedTo: found.issuedTo,
+        reason: isDeactivated ? 'License has been deactivated by the administrator in the vendor portal.' : null
+      });
+      return;
+    }
+
+    json(response, 200, { isDeactivated: false, active: true });
+    return;
+  }
+
   if (!['/api/licenses', '/api/licenses/deactivate'].includes(url.pathname)) {
     json(response, 404, { error: 'Not found.' });
     return;
@@ -372,7 +402,7 @@ const server = createServer((request, response) => {
   });
 });
 
-const port = Number(process.env.PORT || 3000);
+const port = Number(process.env.PORT || 3055);
 // Render injects PORT (e.g. 10000). Always bind to 0.0.0.0 in cloud hosting (Render/Heroku/Railway) so public requests are routed.
 const host = process.env.HOST || (process.env.PORT || process.env.RENDER || process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
 server.listen(port, host, () => {

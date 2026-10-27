@@ -681,6 +681,13 @@
       const STORAGE_KEY = 'vendor_saved_licenses_v1';
       const TOKEN_STORAGE_KEY = 'vendor_admin_token_cache';
 
+      function getApiUrl(path) {
+        if (window.location && window.location.protocol.startsWith('http')) {
+          return path;
+        }
+        return `http://localhost:3055${path}`;
+      }
+
       // Elements
       const mainCard = document.querySelector('#main-card');
       const tabGen = document.querySelector('#tab-gen');
@@ -900,7 +907,7 @@
         const actionType = isDeact ? 'deactivate' : licenseType.value;
 
         try {
-          const response = await fetch('/api/licenses', {
+          const response = await fetch(getApiUrl('/api/licenses'), {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -991,7 +998,7 @@
         }
         syncBtn.textContent = '⏳ Syncing...';
         try {
-          const res = await fetch('/api/licenses', {
+          const res = await fetch(getApiUrl('/api/licenses'), {
             headers: { Authorization: `Bearer ${token}` }
           });
           if (res.ok) {
@@ -1026,7 +1033,7 @@
         const token = adminToken.value.trim();
         if (token) {
           try {
-            await fetch(`/api/licenses?id=${encodeURIComponent(key)}`, {
+            await fetch(getApiUrl(`/api/licenses?id=${encodeURIComponent(key)}`), {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${token}` }
             });
@@ -1165,8 +1172,17 @@
       window.deactivateLicenseKey = async function(key) {
         const item = savedLicenses.find(l => l.activationKey === key || l.licenseId === key);
         const name = item?.issuedTo || 'this client';
-        if (!confirm(`Are you sure you want to DEACTIVATE the license key for "${name}"?\n\nThis will mark the client record as revoked.`)) {
+        if (!confirm(`Are you sure you want to DEACTIVATE the license key for "${name}"?\n\nThis will mark the client record as revoked and immediately lock their software terminal.`)) {
           return;
+        }
+
+        let token = adminToken.value.trim();
+        if (!token) {
+          token = prompt('Enter Admin Security Password to update this deactivation on the server:');
+          if (token) {
+            adminToken.value = token;
+            try { localStorage.setItem(TOKEN_STORAGE_KEY, token); } catch {}
+          }
         }
 
         const updated = savedLicenses.map(l => {
@@ -1178,10 +1194,9 @@
         setLocalLicenses(updated);
         renderSavedLicenses();
 
-        const token = adminToken.value.trim();
         if (token) {
           try {
-            await fetch('/api/licenses/deactivate', {
+            const res = await fetch(getApiUrl('/api/licenses/deactivate'), {
               method: 'POST',
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -1189,9 +1204,18 @@
               },
               body: JSON.stringify({ id: key })
             });
-          } catch {}
+            const data = await res.json();
+            if (res.ok) {
+              alert(`✅ License for "${name}" has been permanently DEACTIVATED on the server!\n\nThe client terminal will be immediately locked.`);
+            } else {
+              alert(`Saved locally as deactivated. Server notice: ${data.error || 'Server rejected token'}`);
+            }
+          } catch (e) {
+            alert(`Marked as deactivated in your browser list.\nNote: Could not reach backend server at ${getApiUrl('')} (${e.message}).`);
+          }
+        } else {
+          alert(`License for "${name}" is marked as deactivated locally. Please provide Admin Password to sync with server.`);
         }
-        alert(`License for "${name}" is now marked as Deactivated.`);
       };
 
       window.deleteLicense = deleteLicense;
