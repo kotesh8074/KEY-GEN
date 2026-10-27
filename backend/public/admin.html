@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Lab License Admin</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 24px;
+        display: grid;
+        place-items: center;
+        background: #f1f5f9;
+        color: #0f172a;
+        font: 16px/1.5 system-ui, sans-serif;
+      }
+
+      .card {
+        width: min(100%, 480px);
+        padding: 28px;
+        border: 1px solid #cbd5e1;
+        border-radius: 18px;
+        background: white;
+        box-shadow: 0 12px 36px #0f172a14;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      .intro,
+      .note {
+        color: #475569;
+        font-size: 0.9rem;
+      }
+
+      form,
+      #result {
+        display: grid;
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.875rem;
+        font-weight: 650;
+      }
+
+      label[hidden] {
+        display: none;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 9px;
+        color: #0f172a;
+        font: inherit;
+      }
+
+      textarea {
+        overflow-wrap: anywhere;
+        resize: vertical;
+      }
+
+      .activation-key {
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      #expiry-note {
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+      }
+
+      button {
+        min-height: 42px;
+        border: 0;
+        border-radius: 9px;
+        background: #0369a1;
+        color: white;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      button.secondary {
+        border: 1px solid #cbd5e1;
+        background: white;
+        color: #0f172a;
+      }
+
+      .message {
+        color: #b91c1c;
+        font-size: 0.9rem;
+      }
+
+      .message.success {
+        color: #047857;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Generate 25-Digit Activation Key</h1>
+      <p class="intro">Vendor Portal: Generate cryptographically signed 25-digit offline license keys (XXXXX-XXXXX-XXXXX-XXXXX-XXXXX). 100% offline, hardware machine locked, and tamper protected.</p>
+      <form id="license-form">
+        <label>
+          Generator password
+          <input id="admin-token" type="password" autocomplete="current-password" required>
+        </label>
+        <label>
+          License issued to (person / organization)
+          <input id="issued-to" type="text" maxlength="120" autocomplete="name" required>
+        </label>
+        <label>
+          Contact details (optional)
+          <input id="contact" type="text" maxlength="120" autocomplete="off">
+        </label>
+        <label>
+          Computer Device ID (Hardware Machine Lock)
+          <input id="device-id" type="text" maxlength="128" autocomplete="off" required>
+        </label>
+        <label>
+          License action
+          <select id="license-type">
+            <option value="new">New activation</option>
+            <option value="renewal">Renewal</option>
+          </select>
+        </label>
+        <label>
+          Key duration
+          <select id="license-duration">
+            <option value="1-day">1 day</option>
+            <option value="3-months">3 months</option>
+            <option value="6-months">6 months</option>
+            <option value="1-year" selected>Yearly</option>
+            <option value="custom-days">Custom days</option>
+          </select>
+        </label>
+        <label id="custom-days-field" hidden>
+          Custom duration (days)
+          <input id="custom-days" type="number" min="1" step="1" inputmode="numeric">
+        </label>
+        <label>
+          Expiry date
+          <input id="expires-at" type="date" readonly required>
+        </label>
+        <button id="generate-button" type="submit">Generate 25-Digit Key</button>
+      </form>
+      <p id="message" class="message" role="alert" hidden></p>
+      <section id="result" hidden>
+        <label for="activation-key">25-Digit License Activation Key (Send to User)</label>
+        <textarea id="activation-key" class="activation-key" rows="2" readonly></textarea>
+        <button id="copy-button" type="button">Copy 25-Digit Key</button>
+        <button id="copy-details-button" class="secondary" type="button">Copy Full License Summary</button>
+        <p id="expiry-note" class="note"></p>
+      </section>
+    </main>
+    <script>
+      const form = document.querySelector('#license-form');
+      const adminToken = document.querySelector('#admin-token');
+      const issuedTo = document.querySelector('#issued-to');
+      const contact = document.querySelector('#contact');
+      const deviceId = document.querySelector('#device-id');
+      const licenseType = document.querySelector('#license-type');
+      const licenseDuration = document.querySelector('#license-duration');
+      const customDaysField = document.querySelector('#custom-days-field');
+      const customDays = document.querySelector('#custom-days');
+      const expiresAt = document.querySelector('#expires-at');
+      const generateButton = document.querySelector('#generate-button');
+      const message = document.querySelector('#message');
+      const result = document.querySelector('#result');
+      const activationKey = document.querySelector('#activation-key');
+      const expiryNote = document.querySelector('#expiry-note');
+      const copyButton = document.querySelector('#copy-button');
+      const copyDetailsButton = document.querySelector('#copy-details-button');
+      let licenseDetails = '';
+
+      function formatDate(date) {
+        if (Number.isNaN(date.getTime())) return '';
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function addMonths(date, months) {
+        const result = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+        result.setUTCMonth(result.getUTCMonth() + months);
+        const lastDay = new Date(Date.UTC(result.getUTCFullYear(), result.getUTCMonth() + 1, 0)).getUTCDate();
+        result.setUTCDate(Math.min(date.getUTCDate(), lastDay));
+        return result;
+      }
+
+      function updateExpiryDate() {
+        const today = new Date();
+        today.setUTCHours(0, 0, 0, 0);
+        let expiryDate;
+
+        switch (licenseDuration.value) {
+          case '1-day':
+            expiryDate = new Date(today);
+            expiryDate.setUTCDate(expiryDate.getUTCDate() + 1);
+            break;
+          case '3-months':
+            expiryDate = addMonths(today, 3);
+            break;
+          case '6-months':
+            expiryDate = addMonths(today, 6);
+            break;
+          case '1-year':
+            expiryDate = addMonths(today, 12);
+            break;
+          case 'custom-days': {
+            const days = Number(customDays.value);
+            customDaysField.hidden = false;
+            customDays.required = true;
+            if (!Number.isSafeInteger(days) || days < 1) {
+              expiresAt.value = '';
+              return;
+            }
+            expiryDate = new Date(today);
+            expiryDate.setUTCDate(expiryDate.getUTCDate() + days);
+            break;
+          }
+          default:
+            expiresAt.value = '';
+            return;
+        }
+
+        if (licenseDuration.value !== 'custom-days') {
+          customDaysField.hidden = true;
+          customDays.required = false;
+        }
+        expiresAt.value = formatDate(expiryDate);
+      }
+
+      licenseDuration.addEventListener('change', updateExpiryDate);
+      customDays.addEventListener('input', updateExpiryDate);
+      updateExpiryDate();
+
+      form.addEventListener('submit', async event => {
+        event.preventDefault();
+        message.hidden = true;
+        result.hidden = true;
+        generateButton.disabled = true;
+        generateButton.textContent = 'Generating...';
+
+        try {
+          const response = await fetch('/api/licenses', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${adminToken.value}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              issuedTo: issuedTo.value.trim(),
+              contact: contact.value.trim(),
+              deviceId: deviceId.value.trim(),
+              expiresAt: expiresAt.value,
+              licenseType: licenseType.value
+            })
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
+          activationKey.value = data.activationKey;
+          const issuedDate = new Date(data.issuedAt);
+          const details = [
+            `25-Digit Key: ${data.activationKey}`,
+            `License action: ${data.licenseType === 'renewal' ? 'Renewal' : 'New activation'}`,
+            `Issued to: ${data.issuedTo}`,
+            data.contact ? `Contact: ${data.contact}` : null,
+            `Hardware Terminal ID: ${data.deviceId}`,
+            `Generated: ${issuedDate.toLocaleString()}`,
+            `Expires: ${data.expiresAt}`,
+            `Security: Cryptographically signed & Machine locked (Anti-Clock Rollback Protected)`
+          ].filter(Boolean);
+          licenseDetails = details.join('\n');
+          expiryNote.textContent = licenseDetails;
+          result.hidden = false;
+          message.textContent = '25-Digit Offline license key generated. Provide this 25-digit key to the recipient.';
+          message.className = 'message success';
+          message.hidden = false;
+        } catch (error) {
+          message.textContent = error instanceof TypeError
+            ? 'Cannot reach the license generator. Confirm the Node.js backend is running and open this page from its HTTPS address.'
+            : error.message || 'Could not create the activation key.';
+          message.className = 'message';
+          message.hidden = false;
+        } finally {
+          generateButton.disabled = false;
+          generateButton.textContent = 'Generate 25-Digit Key';
+        }
+      });
+
+      copyDetailsButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(licenseDetails);
+          message.textContent = 'License details copied.';
+          message.className = 'message success';
+        } catch (error) {
+          console.error('Could not copy license details:', error);
+          message.textContent = 'Could not copy details. Select and copy them from the summary above.';
+          message.className = 'message';
+        }
+        message.hidden = false;
+      });
+
+      copyButton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(activationKey.value);
+          message.textContent = 'Key copied.';
+          message.className = 'message success';
+        } catch (error) {
+          console.error('Could not copy activation key:', error);
+          activationKey.focus();
+          activationKey.select();
+          message.textContent = 'Select and copy the key above.';
+          message.className = 'message';
+        }
+        message.hidden = false;
+      });
+    </script>
+  </body>
+</html>
