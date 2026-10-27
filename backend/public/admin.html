@@ -4,55 +4,97 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Lab License Admin</title>
+    <title>Vendor License Generator — Lab Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
     <style>
       * {
         box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
 
       body {
         min-height: 100vh;
-        margin: 0;
-        padding: 24px;
+        padding: 32px 16px;
         display: grid;
         place-items: center;
-        background: #f1f5f9;
+        background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);
         color: #0f172a;
-        font: 16px/1.5 system-ui, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
       }
 
       .card {
-        width: min(100%, 480px);
-        padding: 28px;
-        border: 1px solid #cbd5e1;
-        border-radius: 18px;
-        background: white;
-        box-shadow: 0 12px 36px #0f172a14;
+        width: 100%;
+        max-width: 520px;
+        padding: 32px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 20px;
+        background: #ffffff;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+
+      .header {
+        margin-bottom: 24px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #047857;
+        font-size: 0.725rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      .badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10b981;
       }
 
       h1 {
-        margin: 0;
         font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.5px;
       }
 
-      .intro,
-      .note {
-        color: #475569;
-        font-size: 0.9rem;
+      .intro {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 4px;
+        line-height: 1.45;
       }
 
-      form,
-      #result {
+      form {
         display: grid;
         gap: 14px;
-        margin-top: 22px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
       }
 
       label {
         display: grid;
-        gap: 6px;
-        font-size: 0.875rem;
+        gap: 5px;
+        font-size: 0.8rem;
         font-weight: 650;
+        color: #334155;
       }
 
       label[hidden] {
@@ -60,123 +102,253 @@
       }
 
       input,
-      select,
-      textarea {
+      select {
         width: 100%;
-        padding: 10px 12px;
+        padding: 9px 12px;
         border: 1px solid #cbd5e1;
-        border-radius: 9px;
+        border-radius: 10px;
+        background: #f8fafc;
         color: #0f172a;
-        font: inherit;
+        font-family: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
       }
 
-      textarea {
-        overflow-wrap: anywhere;
-        resize: vertical;
+      input:focus,
+      select:focus {
+        outline: none;
+        background: #ffffff;
+        border-color: #0284c7;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
       }
 
-      .activation-key {
-        font-family: monospace;
-        font-size: 1.1rem;
-        font-weight: bold;
-        text-align: center;
-        letter-spacing: 1px;
-      }
-
-      #expiry-note {
-        white-space: pre-line;
-        overflow-wrap: anywhere;
+      input[readonly] {
+        background: #f1f5f9;
+        color: #475569;
+        cursor: not-allowed;
       }
 
       button {
-        min-height: 42px;
+        min-height: 44px;
         border: 0;
-        border-radius: 9px;
-        background: #0369a1;
+        border-radius: 10px;
+        background: #0284c7;
         color: white;
-        font: inherit;
+        font-family: inherit;
+        font-size: 0.875rem;
         font-weight: 700;
         cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.15s ease;
+      }
+
+      button:hover {
+        background: #0369a1;
+        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      }
+
+      button:active {
+        transform: scale(0.99);
       }
 
       button:disabled {
         cursor: wait;
-        opacity: 0.65;
+        opacity: 0.7;
       }
 
       button.secondary {
         border: 1px solid #cbd5e1;
-        background: white;
-        color: #0f172a;
+        background: #ffffff;
+        color: #334155;
+      }
+
+      button.secondary:hover {
+        background: #f8fafc;
+        border-color: #94a3b8;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
       }
 
       .message {
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 0.825rem;
+        font-weight: 600;
+        margin-top: 14px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
         color: #b91c1c;
-        font-size: 0.9rem;
       }
 
       .message.success {
+        background: #ecfdf5;
+        border-color: #a7f3d0;
         color: #047857;
+      }
+
+      #result {
+        display: grid;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+        animation: fadeIn 0.25s ease;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .key-box {
+        background: #090d16;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 14px 16px;
+        text-align: center;
+      }
+
+      .key-label {
+        font-size: 0.725rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 6px;
+      }
+
+      .activation-key {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #34d399;
+        letter-spacing: 1.5px;
+        word-break: break-all;
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: center;
+        resize: none;
+        outline: none;
+      }
+
+      .note {
+        font-size: 0.775rem;
+        color: #475569;
+        white-space: pre-line;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 12px 14px;
+        line-height: 1.6;
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      .btn-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      @media (max-width: 480px) {
+        .card {
+          padding: 24px 20px;
+        }
+        .grid-2,
+        .btn-group {
+          grid-template-columns: 1fr;
+        }
+        .activation-key {
+          font-size: 1.05rem;
+        }
       }
     </style>
   </head>
   <body>
     <main class="card">
-      <h1>Generate 25-Digit Activation Key</h1>
-      <p class="intro">Vendor Portal: Generate cryptographically signed 25-digit offline license keys (XXXXX-XXXXX-XXXXX-XXXXX-XXXXX). 100% offline, hardware machine locked, and tamper protected.</p>
+      <div class="header">
+        <span class="badge">Vendor License Portal</span>
+        <h1>Offline License Generator</h1>
+        <p class="intro">Generate cryptographically signed 25-digit activation keys bound to the client's terminal ID. Zero internet required by client software.</p>
+      </div>
+
       <form id="license-form">
         <label>
-          Generator password
-          <input id="admin-token" type="password" autocomplete="current-password" required>
+          Admin Security Password *
+          <input id="admin-token" type="password" placeholder="Enter generator password" autocomplete="current-password" required>
         </label>
+
+        <div class="grid-2">
+          <label>
+            Issued To (Client / Lab) *
+            <input id="issued-to" type="text" placeholder="e.g. Apex Clinical Lab" maxlength="120" autocomplete="name" required>
+          </label>
+          <label>
+            Contact (Phone / Email)
+            <input id="contact" type="text" placeholder="Optional contact info" maxlength="120" autocomplete="off">
+          </label>
+        </div>
+
         <label>
-          License issued to (person / organization)
-          <input id="issued-to" type="text" maxlength="120" autocomplete="name" required>
+          Terminal Device ID (Hardware Machine Lock) *
+          <input id="device-id" type="text" placeholder="Client Terminal ID (from client Settings)" maxlength="128" autocomplete="off" required>
         </label>
-        <label>
-          Contact details (optional)
-          <input id="contact" type="text" maxlength="120" autocomplete="off">
-        </label>
-        <label>
-          Computer Device ID (Hardware Machine Lock)
-          <input id="device-id" type="text" maxlength="128" autocomplete="off" required>
-        </label>
-        <label>
-          License action
-          <select id="license-type">
-            <option value="new">New activation</option>
-            <option value="renewal">Renewal</option>
-          </select>
-        </label>
-        <label>
-          Key duration
-          <select id="license-duration">
-            <option value="1-day">1 day</option>
-            <option value="3-months">3 months</option>
-            <option value="6-months">6 months</option>
-            <option value="1-year" selected>Yearly</option>
-            <option value="custom-days">Custom days</option>
-          </select>
-        </label>
+
+        <div class="grid-2">
+          <label>
+            License Type
+            <select id="license-type">
+              <option value="new">New Activation</option>
+              <option value="renewal">License Renewal</option>
+            </select>
+          </label>
+          <label>
+            License Duration
+            <select id="license-duration">
+              <option value="1-day">1 Day Trial</option>
+              <option value="3-months">3 Months</option>
+              <option value="6-months">6 Months</option>
+              <option value="1-year" selected>1 Year (Annual)</option>
+              <option value="custom-days">Custom Days</option>
+            </select>
+          </label>
+        </div>
+
         <label id="custom-days-field" hidden>
-          Custom duration (days)
-          <input id="custom-days" type="number" min="1" step="1" inputmode="numeric">
+          Custom Duration (Number of Days) *
+          <input id="custom-days" type="number" min="1" step="1" placeholder="Enter days (e.g. 90)" inputmode="numeric">
         </label>
+
         <label>
-          Expiry date
+          Calculated Expiry Date (Auto-locked)
           <input id="expires-at" type="date" readonly required>
         </label>
-        <button id="generate-button" type="submit">Generate 25-Digit Key</button>
+
+        <button id="generate-button" type="submit">
+          Generate 25-Digit License Key
+        </button>
       </form>
+
       <p id="message" class="message" role="alert" hidden></p>
+
       <section id="result" hidden>
-        <label for="activation-key">25-Digit License Activation Key (Send to User)</label>
-        <textarea id="activation-key" class="activation-key" rows="2" readonly></textarea>
-        <button id="copy-button" type="button">Copy 25-Digit Key</button>
-        <button id="copy-details-button" class="secondary" type="button">Copy Full License Summary</button>
-        <p id="expiry-note" class="note"></p>
+        <div class="key-box">
+          <div class="key-label">25-Digit Activation Key (Provide to User)</div>
+          <textarea id="activation-key" class="activation-key" rows="1" readonly></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button id="copy-button" type="button">Copy 25-Digit Key</button>
+          <button id="copy-details-button" class="secondary" type="button">Copy Full Summary</button>
+        </div>
+
+        <div id="expiry-note" class="note"></div>
       </section>
     </main>
+
     <script>
       const form = document.querySelector('#license-form');
       const adminToken = document.querySelector('#admin-token');
@@ -265,7 +437,7 @@
         message.hidden = true;
         result.hidden = true;
         generateButton.disabled = true;
-        generateButton.textContent = 'Generating...';
+        generateButton.textContent = 'Generating Secure Key...';
 
         try {
           const response = await fetch('/api/licenses', {
@@ -287,41 +459,41 @@
           activationKey.value = data.activationKey;
           const issuedDate = new Date(data.issuedAt);
           const details = [
-            `25-Digit Key: ${data.activationKey}`,
-            `License action: ${data.licenseType === 'renewal' ? 'Renewal' : 'New activation'}`,
-            `Issued to: ${data.issuedTo}`,
+            `25-Digit License Key: ${data.activationKey}`,
+            `Action: ${data.licenseType === 'renewal' ? 'Renewal' : 'New activation'}`,
+            `Issued To: ${data.issuedTo}`,
             data.contact ? `Contact: ${data.contact}` : null,
             `Hardware Terminal ID: ${data.deviceId}`,
             `Generated: ${issuedDate.toLocaleString()}`,
             `Expires: ${data.expiresAt}`,
-            `Security: Cryptographically signed & Machine locked (Anti-Clock Rollback Protected)`
+            `Protection: Machine Locked & Anti-Clock Rollback Protected`
           ].filter(Boolean);
           licenseDetails = details.join('\n');
           expiryNote.textContent = licenseDetails;
           result.hidden = false;
-          message.textContent = '25-Digit Offline license key generated. Provide this 25-digit key to the recipient.';
+          message.textContent = 'Key generated successfully! Provide the 25-digit key above to the customer.';
           message.className = 'message success';
           message.hidden = false;
         } catch (error) {
           message.textContent = error instanceof TypeError
-            ? 'Cannot reach the license generator. Confirm the Node.js backend is running and open this page from its HTTPS address.'
+            ? 'Cannot reach the license server. Confirm the Node.js backend is running and open this page from its HTTPS address.'
             : error.message || 'Could not create the activation key.';
           message.className = 'message';
           message.hidden = false;
         } finally {
           generateButton.disabled = false;
-          generateButton.textContent = 'Generate 25-Digit Key';
+          generateButton.textContent = 'Generate 25-Digit License Key';
         }
       });
 
       copyDetailsButton.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(licenseDetails);
-          message.textContent = 'License details copied.';
+          message.textContent = 'Full license summary copied to clipboard.';
           message.className = 'message success';
         } catch (error) {
-          console.error('Could not copy license details:', error);
-          message.textContent = 'Could not copy details. Select and copy them from the summary above.';
+          console.error('Could not copy details:', error);
+          message.textContent = 'Select and copy the details from the box above.';
           message.className = 'message';
         }
         message.hidden = false;
@@ -330,10 +502,10 @@
       copyButton.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(activationKey.value);
-          message.textContent = 'Key copied.';
+          message.textContent = '25-Digit Key copied to clipboard.';
           message.className = 'message success';
         } catch (error) {
-          console.error('Could not copy activation key:', error);
+          console.error('Could not copy key:', error);
           activationKey.focus();
           activationKey.select();
           message.textContent = 'Select and copy the key above.';

@@ -20,16 +20,9 @@ function json(response, status, body) {
 }
 
 function html(response, status, content, type) {
-  const source = content.toString('utf8');
-  const scriptHashes = [...source.matchAll(/<script>([\s\S]*?)<\/script>/gi)]
-    .map(([, script]) => `'sha256-${createHash('sha256').update(script).digest('base64')}'`)
-    .join(' ');
-  const styleHashes = [...source.matchAll(/<style>([\s\S]*?)<\/style>/gi)]
-    .map(([, style]) => `'sha256-${createHash('sha256').update(style).digest('base64')}'`)
-    .join(' ');
   response.writeHead(status, {
     'Cache-Control': 'no-store',
-    'Content-Security-Policy': `default-src 'self'; script-src 'self' ${scriptHashes}; style-src 'self' ${styleHashes}; connect-src 'self'; img-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'`,
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
     'Content-Type': type,
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY'
