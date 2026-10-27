@@ -1,12 +1,69 @@
 import { createServer } from 'node:http';
 import { createHash, createPrivateKey, randomUUID, sign, timingSafeEqual } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, unlink, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = dirname(fileURLToPath(import.meta.url));
 const LICENSES_FILE = join(directory, 'issued-licenses.json');
 const MAX_BODY_BYTES = 4096;
+const MAX_BACKUP_BODY_BYTES = 100 * 1024 * 1024; // 100 MB for database backups
+
+let activeBackupDir = 'D:\\LabBackups';
+let lastBackupMeta = {
+  directory: 'D:\\LabBackups',
+  lastBackupAt: null,
+  lastBackupType: 'daily',
+  lastBackupFileName: null
+};
+
+async function cleanOldBackupsKeepingTwo(targetDir, fileRegex, currentTargetFile) {
+  try {
+    const allFiles = await readdir(targetDir);
+    const matching = allFiles.filter(f => fileRegex.test(f));
+    const withStats = await Promise.all(
+      matching.map(async (filename) => {
+        try {
+          const s = await stat(join(targetDir, filename));
+          return { filename, mtime: s.mtimeMs };
+        } catch {
+          return { filename, mtime: 0 };
+        }
+      })
+    );
+    // Sort newest modified first
+    withStats.sort((a, b) => b.mtime - a.mtime);
+
+    // Keep current target file + 1 previous newest = exactly 2 latest backups
+    const toKeep = new Set();
+    if (currentTargetFile) toKeep.add(currentTargetFile);
+    for (const item of withStats) {
+      if (toKeep.size >= 2) break;
+      toKeep.add(item.filename);
+    }
+
+    const toDelete = withStats.filter(item => !toKeep.has(item.filename));
+    await Promise.all(toDelete.map(item => unlink(join(targetDir, item.filename)).catch(() => {})));
+  } catch (err) {
+    console.warn('Backup cleanup error:', err);
+  }
+}
+
+async function ensureBackupDirectory(targetDir) {
+  const dir = targetDir || activeBackupDir || 'D:\\LabBackups';
+  try {
+    await mkdir(dir, { recursive: true });
+    return dir;
+  } catch {
+    const fallback = 'C:\\LabBackups';
+    try {
+      await mkdir(fallback, { recursive: true });
+      return fallback;
+    } catch {
+      return join(directory, 'backups');
+    }
+  }
+}
 
 async function loadSavedLicenses() {
   try {
@@ -110,19 +167,20 @@ function createTicket(licenseId, deviceId, expiresAt, issuedTo, contact, issuedA
   };
 }
 
-async function readJson(request) {
+async function readJson(request, maxBytes = MAX_BODY_BYTES) {
   const chunks = [];
   let size = 0;
   for await (const chunk of request) {
     size += chunk.length;
-    if (size > MAX_BODY_BYTES) {
+    if (size > maxBytes) {
       throw Object.assign(new Error('Request body is too large.'), { status: 413 });
     }
     chunks.push(chunk);
   }
   try {
-    const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error();
+    const raw = Buffer.concat(chunks).toString('utf8');
+    const body = JSON.parse(raw);
+    if (!body || typeof body !== 'object') throw new Error();
     return body;
   } catch {
     throw Object.assign(new Error('Request must be a JSON object.'), { status: 400 });
@@ -146,6 +204,146 @@ async function handleRequest(request, response) {
   if (request.method === 'GET' && url.pathname === '/health') {
     json(response, 200, { available: true });
     return;
+  }
+
+  // --- AUTOMATIC BACKUP API FOR WEB & DESKTOP ---
+  if (request.method === 'GET' && (url.pathname === '/api/backup/config' || url.pathname === '/api/backup/status')) {
+    json(response, 200, lastBackupMeta);
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/backup/set-directory') {
+    const body = await readJson(request);
+    if (body.directory && typeof body.directory === 'string') {
+      activeBackupDir = await ensureBackupDirectory(body.directory.trim());
+      lastBackupMeta.directory = activeBackupDir;
+      json(response, 200, { success: true, directory: activeBackupDir });
+      return;
+    }
+    json(response, 400, { error: 'Invalid directory provided.' });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/backup/set-interval') {
+    const body = await readJson(request);
+    if (body.interval && typeof body.interval === 'string') {
+      lastBackupMeta.interval = body.interval.trim();
+      json(response, 200, { success: true, interval: lastBackupMeta.interval });
+      return;
+    }
+    json(response, 400, { error: 'Invalid interval provided.' });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/backup/save') {
+    const body = await readJson(request, MAX_BACKUP_BODY_BYTES);
+    const { snapshot, type = 'daily', directory: requestedDir } = body;
+    if (!snapshot) {
+      json(response, 400, { error: 'No data snapshot provided for backup.' });
+      return;
+    }
+
+    try {
+      const targetDir = await ensureBackupDirectory(requestedDir || activeBackupDir);
+      activeBackupDir = targetDir;
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10);
+      const monthStr = dateStr.slice(0, 7);
+      const yearStr = dateStr.slice(0, 4);
+
+      let targetFileName;
+      let fileContents = typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot, null, 2);
+
+      if (type === 'every-minute' || type === '1min') {
+        targetFileName = 'lab-backup-1min.json';
+        try {
+          const allFiles = await readdir(targetDir);
+          const prev = allFiles.filter(f => /^lab-backup-1min.*\.json$/.test(f) && f !== targetFileName);
+          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
+        } catch {}
+      } else if (type === 'yearly') {
+        targetFileName = `lab-backup-yearly-${yearStr}.json`;
+        try {
+          const allFiles = await readdir(targetDir);
+          const prev = allFiles.filter(f => /^lab-backup-yearly-.*\.json$/.test(f) && f !== targetFileName);
+          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
+        } catch {}
+      } else if (type === 'monthly') {
+        targetFileName = `lab-backup-monthly-${monthStr}.json`;
+        try {
+          const allFiles = await readdir(targetDir);
+          const prev = allFiles.filter(f => /^lab-backup-monthly-.*\.json$/.test(f) && f !== targetFileName);
+          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
+        } catch {}
+      } else if (type === 'patient-wise') {
+        targetFileName = 'lab-backup-patients.json';
+        try {
+          const parsed = typeof snapshot === 'string' ? JSON.parse(snapshot) : snapshot;
+          const patientWiseData = {
+            backupType: 'patient-wise',
+            generatedAt: now.toISOString(),
+            totalPatients: parsed.patients ? parsed.patients.length : 0,
+            totalBills: parsed.bills ? parsed.bills.length : 0,
+            patients: (parsed.patients || []).map(p => {
+              const pBills = (parsed.bills || []).filter(b => b.patientId === p.id);
+              const pTests = (p.testIds || []).map(tid => (parsed.tests || []).find(t => t.id === tid)).filter(Boolean);
+              const pResults = {};
+              pTests.forEach(t => {
+                const key = `${p.id}_${t.id}`;
+                if (parsed.results && parsed.results[key]) {
+                  pResults[t.id] = parsed.results[key];
+                }
+              });
+              return {
+                ...p,
+                bills: pBills,
+                tests: pTests,
+                clinicalResults: pResults
+              };
+            }),
+            settings: parsed.settings || {}
+          };
+          fileContents = JSON.stringify(patientWiseData, null, 2);
+        } catch {}
+        try {
+          const allFiles = await readdir(targetDir);
+          const prev = allFiles.filter(f => /^lab-backup-patients.*\.json$/.test(f) && f !== targetFileName);
+          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
+        } catch {}
+      } else {
+        // Daily backup
+        targetFileName = `lab-backup-daily-${dateStr}.json`;
+        try {
+          const allFiles = await readdir(targetDir);
+          const prev = allFiles.filter(f => /^lab-backup-daily-.*\.json$/.test(f) && f !== targetFileName);
+          await Promise.all(prev.map(f => unlink(join(targetDir, f)).catch(() => {})));
+        } catch {}
+      }
+
+      const fullFilePath = join(targetDir, targetFileName);
+      await writeFile(fullFilePath, fileContents, 'utf8');
+
+      // Also persist latest snapshot to backend/lab-data/database.json
+      try {
+        const localDataDir = join(directory, 'lab-data');
+        await mkdir(localDataDir, { recursive: true });
+        await writeFile(join(localDataDir, 'database.json'), typeof snapshot === 'string' ? snapshot : JSON.stringify(snapshot), 'utf8');
+      } catch {}
+
+      lastBackupMeta = {
+        directory: targetDir,
+        lastBackupAt: now.toISOString(),
+        lastBackupType: type,
+        lastBackupFileName: targetFileName
+      };
+
+      json(response, 200, { success: true, ...lastBackupMeta });
+      return;
+    } catch (saveError) {
+      console.error('Backup write error on backend:', saveError);
+      json(response, 500, { error: `Failed to save backup: ${saveError.message}` });
+      return;
+    }
   }
 
   if (request.method === 'GET' && ['/', '/admin', '/admin/'].includes(url.pathname)) {
