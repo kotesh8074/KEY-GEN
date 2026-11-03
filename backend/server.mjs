@@ -5,7 +5,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = dirname(fileURLToPath(import.meta.url));
-const LICENSES_FILE = join(directory, 'issued-licenses.json');
+const LICENSES_FILE = join(directory, 'lab-data', 'issued-licenses.json');
+const REVOKED_FILE = join(directory, 'lab-data', 'revoked-devices.json');
 const MAX_BODY_BYTES = 4096;
 const MAX_BACKUP_BODY_BYTES = 100 * 1024 * 1024; // 100 MB for database backups
 
