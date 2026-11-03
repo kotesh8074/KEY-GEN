@@ -362,5 +362,57 @@
     "labName": "ISSAC DIAGNOSTIC CENTER",
     "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
     "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793689256233_cqm9",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "How do automated backups and CSV spreadsheets work?",
+    "timestamp": "2026-11-03T07:00:56.233Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793689256603_h3mp",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "💾 **Safe Storage & Automatic Backup:**\n\n• **Non-OS Drive Protection:** Backups are placed on safe non-OS drives (e.g. `D:\\LabBackups`) so your data is protected against Windows crashes.\n• **Auto-Retention:** The software strictly keeps the **last 5 backups** in both complete JSON and Excel CSV spreadsheet formats, automatically purging older files.\n• **Manual Backup:** Go to **Backup & Restore** ➔ click **Sync & Back Up Now** or **Export Patient Directory (CSV)** anytime.",
+    "timestamp": "2026-11-03T07:00:56.603Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793689339346_ptl6",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "Browse backup folder",
+    "timestamp": "2026-11-03T07:02:19.347Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793689339697_eipw",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "💾 **Safe Storage & Automatic Backup:**\n\n• **Non-OS Drive Protection:** Backups are placed on safe non-OS drives (e.g. `D:\\LabBackups`) so your data is protected against Windows crashes.\n• **Auto-Retention:** The software strictly keeps the **last 5 backups** in both complete JSON and Excel CSV spreadsheet formats, automatically purging older files.\n• **Manual Backup:** Go to **Backup & Restore** ➔ click **Sync & Back Up Now** or **Export Patient Directory (CSV)** anytime.",
+    "timestamp": "2026-11-03T07:02:19.697Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
   }
 ]

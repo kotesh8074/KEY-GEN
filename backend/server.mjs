@@ -5,8 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const directory = dirname(fileURLToPath(import.meta.url));
-const LICENSES_FILE = join(directory, 'lab-data', 'issued-licenses.json');
-const REVOKED_FILE = join(directory, 'lab-data', 'revoked-devices.json');
+const LICENSES_FILE = join(directory, 'issued-licenses.json');
 const MAX_BODY_BYTES = 4096;
 const MAX_BACKUP_BODY_BYTES = 100 * 1024 * 1024; // 100 MB for database backups
 
@@ -101,116 +100,6 @@ async function deleteSavedLicenseRecord(licenseId) {
     return filtered;
   } catch (error) {
     console.error('Error deleting license record:', error);
-    return [];
-  }
-}
-
-// --- LIVE CHAT DATA PERSISTENCE ---
-const CHAT_FILE = join(directory, 'lab-data', 'chat-messages.json');
-
-async function loadChatMessages() {
-  try {
-    const raw = await readFile(CHAT_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    return [];
-  }
-}
-
-async function saveChatMessage(msg) {
-  try {
-    await mkdir(join(directory, 'lab-data'), { recursive: true });
-    const list = await loadChatMessages();
-    list.push(msg);
-    // Keep the latest 2000 messages
-    const trimmed = list.slice(-2000);
-    await writeFile(CHAT_FILE, JSON.stringify(trimmed, null, 2), 'utf8');
-    return trimmed;
-  } catch (err) {
-    console.error('Error saving chat message:', err);
-    return [];
-  }
-}
-
-async function markChatRead(clientId, reader) {
-  try {
-    const list = await loadChatMessages();
-    let updated = false;
-    for (const m of list) {
-      if (m.clientId === clientId) {
-        if (reader === 'developer' && !m.readByDev) {
-          m.readByDev = true;
-          updated = true;
-        } else if (reader === 'client' && !m.readByClient) {
-          m.readByClient = true;
-          updated = true;
-        }
-      }
-    }
-    if (updated) {
-      await writeFile(CHAT_FILE, JSON.stringify(list, null, 2), 'utf8');
-    }
-    return true;
-  } catch (err) {
-    return false;
-  }
-}
-
-// --- REVOKED DEVICES & KEYS BLACKLIST ---
-async function loadRevokedTargets() {
-  try {
-    const raw = await readFile(REVOKED_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    return [];
-  }
-}
-
-async function addRevokedTarget({ key, deviceId, reason }) {
-  try {
-    await mkdir(join(directory, 'lab-data'), { recursive: true });
-    const list = await loadRevokedTargets();
-    const cleanKey = String(key || '').replace(/\D/g, '');
-    const cleanDev = String(deviceId || '').trim().toUpperCase();
-
-    // Check if already revoked
-    const existing = list.find(r => (cleanDev && r.deviceId === cleanDev) || (cleanKey && r.cleanKey === cleanKey));
-    if (!existing) {
-      list.push({
-        id: `rev_${Date.now()}`,
-        deviceId: cleanDev || null,
-        key: key || null,
-        cleanKey: cleanKey || null,
-        reason: reason || 'Deactivated remotely by developer',
-        revokedAt: new Date().toISOString()
-      });
-      await writeFile(REVOKED_FILE, JSON.stringify(list, null, 2), 'utf8');
-    }
-    return list;
-  } catch (err) {
-    console.error('Error adding revoked target:', err);
-    return [];
-  }
-}
-
-async function removeRevokedTarget({ key, deviceId }) {
-  try {
-    const list = await loadRevokedTargets();
-    const cleanKey = String(key || '').replace(/\D/g, '');
-    const cleanDev = String(deviceId || '').trim().toUpperCase();
-
-    const filtered = list.filter(r => {
-      if (cleanDev && r.deviceId && r.deviceId.toUpperCase() === cleanDev) return false;
-      if (cleanKey && r.cleanKey && r.cleanKey === cleanKey) return false;
-      return true;
-    });
-
-    await writeFile(REVOKED_FILE, JSON.stringify(filtered, null, 2), 'utf8');
-    return filtered;
-  } catch (err) {
-    console.error('Error removing revoked target:', err);
     return [];
   }
 }
@@ -314,85 +203,6 @@ async function handleRequest(request, response) {
 
   if (request.method === 'GET' && url.pathname === '/health') {
     json(response, 200, { available: true });
-    return;
-  }
-
-  // --- LIVE CHAT API FOR DEVELOPER & CLIENT ---
-  if (request.method === 'GET' && url.pathname === '/api/chat/messages') {
-    const clientId = url.searchParams.get('clientId') || '';
-    const messages = await loadChatMessages();
-    const filtered = clientId ? messages.filter(m => m.clientId === clientId) : messages;
-    json(response, 200, { messages: filtered });
-    return;
-  }
-
-  if (request.method === 'GET' && url.pathname === '/api/chat/threads') {
-    const messages = await loadChatMessages();
-    const map = new Map();
-    for (const m of messages) {
-      const cid = m.clientId || 'unknown';
-      if (!map.has(cid)) {
-        map.set(cid, {
-          clientId: cid,
-          labName: m.labName || 'Diagnostic Lab Client',
-          deviceId: m.deviceId || cid,
-          macAddress: m.macAddress || '',
-          lastMessage: m,
-          unreadCount: 0,
-          totalMessages: 0
-        });
-      }
-      const thread = map.get(cid);
-      thread.lastMessage = m;
-      thread.totalMessages++;
-      if (m.sender === 'client' && !m.readByDev) {
-        thread.unreadCount++;
-      }
-      if (m.labName) thread.labName = m.labName;
-      if (m.macAddress) thread.macAddress = m.macAddress;
-    }
-    const threads = Array.from(map.values()).sort((a, b) => {
-      const ta = new Date(a.lastMessage?.timestamp || 0).getTime();
-      const tb = new Date(b.lastMessage?.timestamp || 0).getTime();
-      return tb - ta;
-    });
-    json(response, 200, { threads });
-    return;
-  }
-
-  if (request.method === 'POST' && url.pathname === '/api/chat/send') {
-    const body = await readJson(request);
-    const { clientId, sender = 'client', text, senderName, labName, deviceId, macAddress } = body;
-    if (!text || !text.trim()) {
-      json(response, 400, { error: 'Message text is required.' });
-      return;
-    }
-    const cid = String(clientId || deviceId || 'anonymous').trim();
-    const msg = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      clientId: cid,
-      sender: sender === 'developer' ? 'developer' : 'client',
-      senderName: senderName || (sender === 'developer' ? 'Developer Support' : (labName || 'Lab Client')),
-      text: text.trim(),
-      timestamp: new Date().toISOString(),
-      readByClient: sender === 'client',
-      readByDev: sender === 'developer',
-      labName: labName || '',
-      deviceId: deviceId || cid,
-      macAddress: macAddress || ''
-    };
-    await saveChatMessage(msg);
-    json(response, 201, { success: true, message: msg });
-    return;
-  }
-
-  if (request.method === 'POST' && url.pathname === '/api/chat/read') {
-    const body = await readJson(request);
-    const { clientId, reader = 'client' } = body;
-    if (clientId) {
-      await markChatRead(clientId, reader);
-    }
-    json(response, 200, { success: true });
     return;
   }
 
@@ -547,38 +357,23 @@ async function handleRequest(request, response) {
     const key = url.searchParams.get('key') || '';
     const deviceId = url.searchParams.get('deviceId') || '';
     const cleanKey = key.replace(/\D/g, '');
-
-    // 1. Check direct revocation file (fastest & most authoritative)
-    const revoked = await loadRevokedTargets();
-    const isRevoked = revoked.some(r =>
-      (deviceId && r.deviceId && r.deviceId.toUpperCase() === deviceId.toUpperCase()) ||
-      (cleanKey && r.cleanKey && r.cleanKey === cleanKey)
-    );
-    if (isRevoked) {
-      json(response, 200, {
-        isDeactivated: true,
-        active: false,
-        reason: 'License has been deactivated by the administrator in the vendor portal.'
-      });
-      return;
-    }
-
-    // 2. Check saved license records
     const records = await loadSavedLicenses();
+
     const found = records.find(item => {
       const itemClean = (item.activationKey || item.licenseId || '').replace(/\D/g, '');
       if (cleanKey && itemClean && cleanKey === itemClean) return true;
-      if (deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase()) return true;
+      if (deviceId && item.deviceId && item.deviceId.toLowerCase() === deviceId.toLowerCase()) return true;
       return false;
     });
 
-    if (found && (found.isDeactivated || found.licenseType === 'deactivate' || found.days === 0)) {
+    if (found) {
+      const isDeactivated = Boolean(found.isDeactivated || found.licenseType === 'deactivate' || found.days === 0);
       json(response, 200, {
-        isDeactivated: true,
-        active: false,
+        isDeactivated,
+        active: !isDeactivated,
         expiresAt: found.expiresAt,
         issuedTo: found.issuedTo,
-        reason: 'License has been deactivated by the administrator in the vendor portal.'
+        reason: isDeactivated ? 'License has been deactivated by the administrator in the vendor portal.' : null
       });
       return;
     }
@@ -587,23 +382,29 @@ async function handleRequest(request, response) {
     return;
   }
 
-  if (!['/api/licenses', '/api/licenses/deactivate', '/api/licenses/reactivate'].includes(url.pathname)) {
+  if (!['/api/licenses', '/api/licenses/deactivate'].includes(url.pathname)) {
     json(response, 404, { error: 'Not found.' });
     return;
   }
 
-  const adminToken = process.env.LICENSE_ADMIN_TOKEN || 'admin123';
+  const adminToken = process.env.LICENSE_ADMIN_TOKEN;
+  if (!adminToken) {
+    json(response, 500, {
+      error: 'LICENSE_ADMIN_TOKEN is not set in Render environment variables. Please add LICENSE_ADMIN_TOKEN in your Render dashboard.'
+    });
+    return;
+  }
+
   const authHeader = request.headers.authorization || '';
   const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (adminToken && suppliedToken && !constantTimeEqual(suppliedToken, adminToken)) {
+  if (!constantTimeEqual(suppliedToken, adminToken)) {
     json(response, 401, { error: 'Admin token is incorrect.' });
     return;
   }
 
   if (request.method === 'GET') {
     const records = await loadSavedLicenses();
-    const revoked = await loadRevokedTargets();
-    json(response, 200, { licenses: records, revoked });
+    json(response, 200, { licenses: records });
     return;
   }
 
@@ -620,19 +421,14 @@ async function handleRequest(request, response) {
 
   if (request.method === 'POST' && url.pathname === '/api/licenses/deactivate') {
     const body = await readJson(request);
-    const key = body.id || body.activationKey || body.licenseId || '';
-    const deviceId = body.deviceId || '';
-    if (!key && !deviceId) {
-      json(response, 400, { error: 'Key or Device ID is required to deactivate.' });
+    const key = body.id || body.activationKey || body.licenseId;
+    if (!key) {
+      json(response, 400, { error: 'Key is required to deactivate.' });
       return;
     }
-
-    await addRevokedTarget({ key, deviceId, reason: body.reason || 'Deactivated by developer' });
     const records = await loadSavedLicenses();
     const updated = records.map(item => {
-      const matchKey = key && (item.activationKey === key || item.licenseId === key);
-      const matchDev = deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase();
-      if (matchKey || matchDev) {
+      if (item.activationKey === key || item.licenseId === key) {
         return {
           ...item,
           isDeactivated: true,
@@ -641,32 +437,8 @@ async function handleRequest(request, response) {
       }
       return item;
     });
-    await writeFile(LICENSES_FILE, JSON.stringify(updated, null, 2), 'utf8');
-    json(response, 200, { success: true, isDeactivated: true, message: 'License deactivated successfully.' });
-    return;
-  }
-
-  if (request.method === 'POST' && url.pathname === '/api/licenses/reactivate') {
-    const body = await readJson(request);
-    const key = body.id || body.activationKey || body.licenseId || '';
-    const deviceId = body.deviceId || '';
-    await removeRevokedTarget({ key, deviceId });
-
-    const records = await loadSavedLicenses();
-    const updated = records.map(item => {
-      const matchKey = key && (item.activationKey === key || item.licenseId === key);
-      const matchDev = deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase();
-      if (matchKey || matchDev) {
-        return {
-          ...item,
-          isDeactivated: false,
-          reactivatedAt: new Date().toISOString()
-        };
-      }
-      return item;
-    });
-    await writeFile(LICENSES_FILE, JSON.stringify(updated, null, 2), 'utf8');
-    json(response, 200, { success: true, isDeactivated: false, message: 'License re-activated successfully.' });
+    await writeFile(LICENSES_STORAGE_PATH, JSON.stringify(updated, null, 2), 'utf8');
+    json(response, 200, { success: true, licenses: updated });
     return;
   }
 
