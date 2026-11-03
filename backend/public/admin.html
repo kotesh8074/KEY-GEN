@@ -946,9 +946,6 @@
                 <div id="current-client-meta" class="active-meta">Select a client lab on the left to begin messaging</div>
               </div>
               <div id="current-client-actions" class="terminal-actions" style="display:none;">
-                <button id="quick-send-key-btn" class="action-pill-btn primary" type="button">
-                  🔑 Send 1-Yr Key
-                </button>
                 <button id="deactivate-terminal-btn" class="action-pill-btn danger" type="button">
                   🛑 Deactivate Terminal
                 </button>
@@ -1182,8 +1179,9 @@
           fetchChatThreads();
           if (!chatPollTimer) {
             chatPollTimer = setInterval(() => {
+              fetchChatThreads();
               if (activeChatClient) loadConversation(false);
-            }, 3000);
+            }, 2000);
           }
         } else {
           if (chatPollTimer) {
@@ -1465,7 +1463,13 @@
         }
 
         const currentCount = messagesLog.querySelectorAll('.chat-row').length;
-        const isNewMessage = msgs.length !== currentCount;
+        const lastExistingText = messagesLog.querySelector('.chat-row:last-child .message-bubble')?.textContent;
+        const latestMsgText = msgs[msgs.length - 1]?.text;
+        const hasContentChanged = msgs.length !== currentCount || (latestMsgText && latestMsgText !== lastExistingText);
+
+        if (!hasContentChanged && !forceScroll) {
+          return;
+        }
 
         messagesLog.innerHTML = msgs.map(m => {
           const isDev = m.sender === 'developer';
@@ -1484,7 +1488,7 @@
           `;
         }).join('');
 
-        if (forceScroll || isNewMessage) {
+        if (forceScroll || hasContentChanged) {
           scrollMessagesToBottom(forceScroll);
         }
       }
@@ -1545,16 +1549,18 @@
         if (activeChatClient) loadConversation();
       });
 
-      // Quick 1-Year Key from Chat
-      quickSendKeyBtn.addEventListener('click', async () => {
-        if (!activeChatClient) return;
-        setTab('generator');
-        deviceId.value = activeChatClient.deviceId || '';
-        issuedTo.value = activeChatClient.labName || '';
-        licenseDuration.value = '1-year';
-        updateExpiry();
-        alert(`Form pre-filled for "${activeChatClient.labName}". Click "Generate 25-Digit License Key" to generate.`);
-      });
+      // Quick 1-Year Key from Chat (if present)
+      if (quickSendKeyBtn) {
+        quickSendKeyBtn.addEventListener('click', async () => {
+          if (!activeChatClient) return;
+          setTab('generator');
+          deviceId.value = activeChatClient.deviceId || '';
+          issuedTo.value = activeChatClient.labName || '';
+          licenseDuration.value = '1-year';
+          updateExpiry();
+          alert(`Form pre-filled for "${activeChatClient.labName}". Click "Generate 25-Digit License Key" to generate.`);
+        });
+      }
 
       // 🛑 DEACTIVATE TERMINAL (REVOCATION OVER INTERNET)
       deactivateTerminalBtn.addEventListener('click', async () => {
@@ -1829,8 +1835,9 @@
       // Start automatic live chat sync polling
       if (!chatPollTimer) {
         chatPollTimer = setInterval(() => {
+          fetchChatThreads();
           if (activeChatClient) loadConversation(false);
-        }, 3000);
+        }, 2000);
       }
     </script>
   </body>

@@ -336,5 +336,31 @@
     "labName": "ISSAC DIAGNOSTIC CENTER",
     "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
     "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793688724771_oeob",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "Hello, please provide renewal information for ISSAC DIAGNOSTIC CENTER. My Device ID is: 563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "timestamp": "2026-11-03T06:52:04.771Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793688725183_hit1",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "🔑 **License & Activation Details:**\n\n• **Your System Device ID:** `563AFCD2-5673-4D45-88A6-9AA11DE2513C`\n• **System Hardware MAC:** `0C:9A:3C:A0:54:47`\n• **Registered Lab:** ISSAC DIAGNOSTIC CENTER\n\n**To Renew:** Enter a 25-digit key in the format: `XXXXX-XXXXX-XXXXX-XXXXX-XXXXX`.\n\n✅ *I have immediately relayed your Device ID to our developer team. They will reply directly here with your key!*",
+    "timestamp": "2026-11-03T06:52:05.183Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
   }
 ]
