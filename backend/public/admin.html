@@ -935,9 +935,9 @@
               </button>
             </div>
 
-            <!-- Message Input Bar -->
-            <form id="chat-send-form" class="chat-input-bar" style="display:none;">
-              <textarea id="chat-input" class="chat-textarea" rows="2" placeholder="Type a message or response to this lab client... (Press Enter to send)"></textarea>
+            <!-- Message Input Bar (Always Visible & Accessible) -->
+            <form id="chat-send-form" class="chat-input-bar">
+              <textarea id="chat-input" class="chat-textarea" rows="2" placeholder="Select a terminal or start typing a message... (Press Enter to send)"></textarea>
               <button id="chat-submit-btn" class="send-btn" type="submit">Send</button>
             </form>
           </section>
@@ -1282,6 +1282,9 @@
 
       // Quick canned message
       window.insertCanned = function(text) {
+        if (!activeChatClient && chatThreads.length > 0) {
+          selectTerminal(chatThreads[0].clientId);
+        }
         chatInput.value = text;
         chatInput.focus();
       };
@@ -1301,6 +1304,11 @@
               chatAlertBadge.textContent = String(unread);
             } else {
               chatAlertBadge.style.display = 'none';
+            }
+
+            // Auto-select the first available client terminal if none currently selected
+            if (!activeChatClient && chatThreads.length > 0) {
+              selectTerminal(chatThreads[0].clientId);
             }
           }
         } catch {}
@@ -1429,6 +1437,16 @@
         e.preventDefault();
         const text = chatInput.value.trim();
         if (!text) return;
+
+        if (!activeChatClient) {
+          if (chatThreads.length > 0) {
+            await selectTerminal(chatThreads[0].clientId);
+          } else {
+            alert('Please select or wait for a client terminal to connect before sending.');
+            return;
+          }
+        }
+
         chatInput.value = '';
         chatSubmitBtn.disabled = true;
         await sendChatMessage(text);
