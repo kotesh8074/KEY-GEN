@@ -193,7 +193,8 @@
       .chat-studio {
         display: grid;
         grid-template-columns: 320px 1fr;
-        height: 720px;
+        height: 740px;
+        max-height: 82vh;
         border-radius: 18px;
         overflow: hidden;
         border: 1px solid var(--border-glass);
@@ -206,6 +207,9 @@
         display: flex;
         flex-direction: column;
         background: rgba(10, 16, 30, 0.85);
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .sidebar-header {
@@ -324,9 +328,14 @@
         display: flex;
         flex-direction: column;
         background: rgba(8, 13, 24, 0.95);
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+        position: relative;
       }
 
       .chat-active-bar {
+        flex-shrink: 0;
         padding: 16px 20px;
         border-bottom: 1px solid var(--border-glass);
         display: flex;
@@ -404,14 +413,34 @@
         background: rgba(14, 165, 233, 0.25);
       }
 
-      /* Conversation Log Area */
+      /* Conversation Log Area - Dedicated Scrollable Viewport */
       .messages-log {
-        flex: 1;
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto;
+        overflow-x: hidden;
         padding: 24px;
         display: flex;
         flex-direction: column;
         gap: 14px;
+        scroll-behavior: smooth;
+      }
+
+      .messages-log::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .messages-log::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .messages-log::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 9999px;
+      }
+
+      .messages-log::-webkit-scrollbar-thumb:hover {
+        background: rgba(56, 189, 248, 0.4);
       }
 
       .chat-row {
@@ -466,6 +495,7 @@
 
       /* Canned Quick Actions Bar */
       .quick-actions-bar {
+        flex-shrink: 0;
         padding: 8px 16px;
         border-top: 1px solid var(--border-glass);
         background: rgba(15, 23, 42, 0.4);
@@ -494,13 +524,19 @@
         color: #ffffff;
       }
 
-      /* Chat Input Bar */
+      /* Chat Input Bar - Stable Docked Bottom */
       .chat-input-bar {
-        padding: 16px 20px;
+        flex-shrink: 0;
+        padding: 14px 20px;
         border-top: 1px solid var(--border-glass);
-        background: rgba(15, 23, 42, 0.7);
+        background: rgba(13, 20, 36, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         display: flex;
         gap: 10px;
+        align-items: flex-end;
+        box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.35);
+        z-index: 5;
       }
 
       .chat-textarea {
@@ -508,21 +544,26 @@
         padding: 12px 16px;
         border-radius: 12px;
         border: 1px solid var(--border-glass);
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.5);
         color: #ffffff;
         font-family: inherit;
-        font-size: 0.85rem;
+        font-size: 0.875rem;
+        min-height: 44px;
+        max-height: 120px;
+        line-height: 1.45;
         resize: none;
         outline: none;
-        transition: border-color 0.15s ease;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
 
       .chat-textarea:focus {
         border-color: var(--primary-glow);
-        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+        background: rgba(0, 0, 0, 0.65);
       }
 
       .send-btn {
+        height: 44px;
         padding: 0 24px;
         border-radius: 12px;
         border: 0;
@@ -534,9 +575,12 @@
         cursor: pointer;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
         box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
         transition: all 0.15s ease;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .send-btn:hover {
@@ -1115,6 +1159,8 @@
       let chatThreads = [];
       let activeChatClient = null;
       let lastGeneratedReceipt = '';
+      let chatPollTimer = null;
+      let isUserScrolledUp = false;
 
       // Load token
       try {
@@ -1134,8 +1180,19 @@
 
         if (tab === 'chat') {
           fetchChatThreads();
-        } else if (tab === 'clients') {
-          syncServerRecords();
+          if (!chatPollTimer) {
+            chatPollTimer = setInterval(() => {
+              if (activeChatClient) loadConversation(false);
+            }, 3000);
+          }
+        } else {
+          if (chatPollTimer) {
+            clearInterval(chatPollTimer);
+            chatPollTimer = null;
+          }
+          if (tab === 'clients') {
+            syncServerRecords();
+          }
         }
       }
 
@@ -1359,7 +1416,8 @@
         deviceId.value = client.deviceId || '';
         issuedTo.value = client.labName || '';
 
-        await loadConversation();
+        isUserScrolledUp = false;
+        await loadConversation(true);
 
         // Mark as read
         fetch(getApiUrl('/api/chat/read'), {
@@ -1369,19 +1427,34 @@
         }).then(() => fetchChatThreads()).catch(() => {});
       };
 
-      async function loadConversation() {
+      // Track if user manually scrolled up in conversation to prevent aggressive scroll jumping
+      messagesLog.addEventListener('scroll', () => {
+        const threshold = 60;
+        const distFromBottom = messagesLog.scrollHeight - messagesLog.scrollTop - messagesLog.clientHeight;
+        isUserScrolledUp = distFromBottom > threshold;
+      });
+
+      function scrollMessagesToBottom(force = false) {
+        if (force || !isUserScrolledUp) {
+          requestAnimationFrame(() => {
+            messagesLog.scrollTop = messagesLog.scrollHeight;
+          });
+        }
+      }
+
+      async function loadConversation(forceScroll = false) {
         if (!activeChatClient) return;
         try {
           const res = await fetch(getApiUrl(`/api/chat/messages?clientId=${encodeURIComponent(activeChatClient.clientId)}`));
           if (res.ok) {
             const data = await res.json();
             const msgs = Array.isArray(data.messages) ? data.messages : [];
-            renderMessages(msgs);
+            renderMessages(msgs, forceScroll);
           }
         } catch {}
       }
 
-      function renderMessages(msgs) {
+      function renderMessages(msgs, forceScroll = false) {
         if (msgs.length === 0) {
           messagesLog.innerHTML = `
             <div class="empty-placeholder" style="margin:auto;">
@@ -1390,6 +1463,9 @@
           `;
           return;
         }
+
+        const currentCount = messagesLog.querySelectorAll('.chat-row').length;
+        const isNewMessage = msgs.length !== currentCount;
 
         messagesLog.innerHTML = msgs.map(m => {
           const isDev = m.sender === 'developer';
@@ -1408,7 +1484,9 @@
           `;
         }).join('');
 
-        messagesLog.scrollTop = messagesLog.scrollHeight;
+        if (forceScroll || isNewMessage) {
+          scrollMessagesToBottom(forceScroll);
+        }
       }
 
       async function sendChatMessage(text) {
@@ -1426,7 +1504,8 @@
               deviceId: activeChatClient.deviceId
             })
           });
-          await loadConversation();
+          isUserScrolledUp = false;
+          await loadConversation(true);
           await fetchChatThreads();
         } catch (e) {
           alert('Could not deliver chat message: ' + e.message);
@@ -1746,6 +1825,13 @@
       } catch {}
       updateBadges();
       fetchChatThreads();
+
+      // Start automatic live chat sync polling
+      if (!chatPollTimer) {
+        chatPollTimer = setInterval(() => {
+          if (activeChatClient) loadConversation(false);
+        }, 3000);
+      }
     </script>
   </body>
 </html>

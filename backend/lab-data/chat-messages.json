@@ -258,5 +258,83 @@
     "labName": "ISSAC DIAGNOSTIC CENTER",
     "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
     "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684630487_96s3",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "How do I set up and verify my direct laboratory printer?",
+    "timestamp": "2026-11-03T05:43:50.487Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684630946_75ti",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "🖨️ **Printer & Hardware Setup Guide:**\n\n1. Open **Settings** ➔ click the **Printer Configuration** tab.\n2. The system automatically detects connected printers (Canon, HP, PDF, etc.). Select your default printer from the dropdown.\n3. Enable **Direct Silent Print** so reports print instantly without prompting the Windows OS print dialog.\n4. Click **Print Test Page** to verify paper feed & output!",
+    "timestamp": "2026-11-03T05:43:50.946Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684663491_90fc",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "Enable silent printing",
+    "timestamp": "2026-11-03T05:44:23.491Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684663808_5pon",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "🖨️ **Printer & Hardware Setup Guide:**\n\n1. Open **Settings** ➔ click the **Printer Configuration** tab.\n2. The system automatically detects connected printers (Canon, HP, PDF, etc.). Select your default printer from the dropdown.\n3. Enable **Direct Silent Print** so reports print instantly without prompting the Windows OS print dialog.\n4. Click **Print Test Page** to verify paper feed & output!",
+    "timestamp": "2026-11-03T05:44:23.808Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684667413_9emn",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "Print test page",
+    "timestamp": "2026-11-03T05:44:27.413Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  },
+  {
+    "id": "msg_1793684667665_20ky",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "developer",
+    "senderName": "Diagnostic AI Assistant",
+    "text": "🖨️ **Printer & Hardware Setup Guide:**\n\n1. Open **Settings** ➔ click the **Printer Configuration** tab.\n2. The system automatically detects connected printers (Canon, HP, PDF, etc.). Select your default printer from the dropdown.\n3. Enable **Direct Silent Print** so reports print instantly without prompting the Windows OS print dialog.\n4. Click **Print Test Page** to verify paper feed & output!",
+    "timestamp": "2026-11-03T05:44:27.665Z",
+    "readByClient": true,
+    "readByDev": true,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
   }
 ]
