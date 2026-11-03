@@ -158,8 +158,6 @@ async function markChatRead(clientId, reader) {
 }
 
 // --- REVOKED DEVICES & KEYS BLACKLIST ---
-const REVOKED_FILE = join(directory, 'lab-data', 'revoked-devices.json');
-
 async function loadRevokedTargets() {
   try {
     const raw = await readFile(REVOKED_FILE, 'utf8');
