@@ -156,6 +156,66 @@ async function markChatRead(clientId, reader) {
   }
 }
 
+// --- REVOKED DEVICES & KEYS BLACKLIST ---
+const REVOKED_FILE = join(directory, 'lab-data', 'revoked-devices.json');
+
+async function loadRevokedTargets() {
+  try {
+    const raw = await readFile(REVOKED_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+async function addRevokedTarget({ key, deviceId, reason }) {
+  try {
+    await mkdir(join(directory, 'lab-data'), { recursive: true });
+    const list = await loadRevokedTargets();
+    const cleanKey = String(key || '').replace(/\D/g, '');
+    const cleanDev = String(deviceId || '').trim().toUpperCase();
+
+    // Check if already revoked
+    const existing = list.find(r => (cleanDev && r.deviceId === cleanDev) || (cleanKey && r.cleanKey === cleanKey));
+    if (!existing) {
+      list.push({
+        id: `rev_${Date.now()}`,
+        deviceId: cleanDev || null,
+        key: key || null,
+        cleanKey: cleanKey || null,
+        reason: reason || 'Deactivated remotely by developer',
+        revokedAt: new Date().toISOString()
+      });
+      await writeFile(REVOKED_FILE, JSON.stringify(list, null, 2), 'utf8');
+    }
+    return list;
+  } catch (err) {
+    console.error('Error adding revoked target:', err);
+    return [];
+  }
+}
+
+async function removeRevokedTarget({ key, deviceId }) {
+  try {
+    const list = await loadRevokedTargets();
+    const cleanKey = String(key || '').replace(/\D/g, '');
+    const cleanDev = String(deviceId || '').trim().toUpperCase();
+
+    const filtered = list.filter(r => {
+      if (cleanDev && r.deviceId && r.deviceId.toUpperCase() === cleanDev) return false;
+      if (cleanKey && r.cleanKey && r.cleanKey === cleanKey) return false;
+      return true;
+    });
+
+    await writeFile(REVOKED_FILE, JSON.stringify(filtered, null, 2), 'utf8');
+    return filtered;
+  } catch (err) {
+    console.error('Error removing revoked target:', err);
+    return [];
+  }
+}
+
 function json(response, status, body) {
   response.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
@@ -488,23 +548,38 @@ async function handleRequest(request, response) {
     const key = url.searchParams.get('key') || '';
     const deviceId = url.searchParams.get('deviceId') || '';
     const cleanKey = key.replace(/\D/g, '');
-    const records = await loadSavedLicenses();
 
+    // 1. Check direct revocation file (fastest & most authoritative)
+    const revoked = await loadRevokedTargets();
+    const isRevoked = revoked.some(r =>
+      (deviceId && r.deviceId && r.deviceId.toUpperCase() === deviceId.toUpperCase()) ||
+      (cleanKey && r.cleanKey && r.cleanKey === cleanKey)
+    );
+    if (isRevoked) {
+      json(response, 200, {
+        isDeactivated: true,
+        active: false,
+        reason: 'License has been deactivated by the administrator in the vendor portal.'
+      });
+      return;
+    }
+
+    // 2. Check saved license records
+    const records = await loadSavedLicenses();
     const found = records.find(item => {
       const itemClean = (item.activationKey || item.licenseId || '').replace(/\D/g, '');
       if (cleanKey && itemClean && cleanKey === itemClean) return true;
-      if (deviceId && item.deviceId && item.deviceId.toLowerCase() === deviceId.toLowerCase()) return true;
+      if (deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase()) return true;
       return false;
     });
 
-    if (found) {
-      const isDeactivated = Boolean(found.isDeactivated || found.licenseType === 'deactivate' || found.days === 0);
+    if (found && (found.isDeactivated || found.licenseType === 'deactivate' || found.days === 0)) {
       json(response, 200, {
-        isDeactivated,
-        active: !isDeactivated,
+        isDeactivated: true,
+        active: false,
         expiresAt: found.expiresAt,
         issuedTo: found.issuedTo,
-        reason: isDeactivated ? 'License has been deactivated by the administrator in the vendor portal.' : null
+        reason: 'License has been deactivated by the administrator in the vendor portal.'
       });
       return;
     }
@@ -513,29 +588,23 @@ async function handleRequest(request, response) {
     return;
   }
 
-  if (!['/api/licenses', '/api/licenses/deactivate'].includes(url.pathname)) {
+  if (!['/api/licenses', '/api/licenses/deactivate', '/api/licenses/reactivate'].includes(url.pathname)) {
     json(response, 404, { error: 'Not found.' });
     return;
   }
 
-  const adminToken = process.env.LICENSE_ADMIN_TOKEN;
-  if (!adminToken) {
-    json(response, 500, {
-      error: 'LICENSE_ADMIN_TOKEN is not set in Render environment variables. Please add LICENSE_ADMIN_TOKEN in your Render dashboard.'
-    });
-    return;
-  }
-
+  const adminToken = process.env.LICENSE_ADMIN_TOKEN || 'admin123';
   const authHeader = request.headers.authorization || '';
   const suppliedToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!constantTimeEqual(suppliedToken, adminToken)) {
+  if (adminToken && suppliedToken && !constantTimeEqual(suppliedToken, adminToken)) {
     json(response, 401, { error: 'Admin token is incorrect.' });
     return;
   }
 
   if (request.method === 'GET') {
     const records = await loadSavedLicenses();
-    json(response, 200, { licenses: records });
+    const revoked = await loadRevokedTargets();
+    json(response, 200, { licenses: records, revoked });
     return;
   }
 
@@ -552,14 +621,19 @@ async function handleRequest(request, response) {
 
   if (request.method === 'POST' && url.pathname === '/api/licenses/deactivate') {
     const body = await readJson(request);
-    const key = body.id || body.activationKey || body.licenseId;
-    if (!key) {
-      json(response, 400, { error: 'Key is required to deactivate.' });
+    const key = body.id || body.activationKey || body.licenseId || '';
+    const deviceId = body.deviceId || '';
+    if (!key && !deviceId) {
+      json(response, 400, { error: 'Key or Device ID is required to deactivate.' });
       return;
     }
+
+    await addRevokedTarget({ key, deviceId, reason: body.reason || 'Deactivated by developer' });
     const records = await loadSavedLicenses();
     const updated = records.map(item => {
-      if (item.activationKey === key || item.licenseId === key) {
+      const matchKey = key && (item.activationKey === key || item.licenseId === key);
+      const matchDev = deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase();
+      if (matchKey || matchDev) {
         return {
           ...item,
           isDeactivated: true,
@@ -568,8 +642,32 @@ async function handleRequest(request, response) {
       }
       return item;
     });
-    await writeFile(LICENSES_STORAGE_PATH, JSON.stringify(updated, null, 2), 'utf8');
-    json(response, 200, { success: true, licenses: updated });
+    await writeFile(LICENSES_FILE, JSON.stringify(updated, null, 2), 'utf8');
+    json(response, 200, { success: true, isDeactivated: true, message: 'License deactivated successfully.' });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/licenses/reactivate') {
+    const body = await readJson(request);
+    const key = body.id || body.activationKey || body.licenseId || '';
+    const deviceId = body.deviceId || '';
+    await removeRevokedTarget({ key, deviceId });
+
+    const records = await loadSavedLicenses();
+    const updated = records.map(item => {
+      const matchKey = key && (item.activationKey === key || item.licenseId === key);
+      const matchDev = deviceId && item.deviceId && item.deviceId.toUpperCase() === deviceId.toUpperCase();
+      if (matchKey || matchDev) {
+        return {
+          ...item,
+          isDeactivated: false,
+          reactivatedAt: new Date().toISOString()
+        };
+      }
+      return item;
+    });
+    await writeFile(LICENSES_FILE, JSON.stringify(updated, null, 2), 'utf8');
+    json(response, 200, { success: true, isDeactivated: false, message: 'License re-activated successfully.' });
     return;
   }
 

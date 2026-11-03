@@ -4,11 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Vendor License Generator &amp; Client Manager — Lab Management</title>
+    <title>Developer Command Center &amp; License Console — Lab Management</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --bg-main: #0a0f1d;
+        --bg-panel: rgba(15, 23, 42, 0.75);
+        --bg-surface: #131d34;
+        --bg-card: #18233d;
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --border-glow: rgba(56, 189, 248, 0.25);
+        --primary: #0284c7;
+        --primary-glow: #38bdf8;
+        --primary-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --text-bright: #f8fafc;
+        --text-sub: #94a3b8;
+        --text-muted: #64748b;
+      }
+
       * {
         box-sizing: border-box;
         margin: 0;
@@ -17,767 +36,946 @@
 
       body {
         min-height: 100vh;
-        padding: 24px 16px;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #090d16 0%, #0f172a 50%, #1e293b 100%);
-        color: #0f172a;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                    radial-gradient(circle at 90% 90%, rgba(37, 99, 235, 0.12) 0%, transparent 40%),
+                    #070b14;
+        color: var(--text-bright);
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
         line-height: 1.5;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
-      .card {
+      .app-shell {
         width: 100%;
-        max-width: 680px;
-        padding: 28px sm:36px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 20px;
-        background: #ffffff;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.05);
-        transition: max-width 0.2s ease;
+        max-width: 1280px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
       }
 
-      .card.wide {
-        max-width: 760px;
-      }
-
-      .top-nav {
+      /* TOP COMMAND BAR */
+      .top-navbar {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
-        padding-bottom: 16px;
-        border-bottom: 1px solid #e2e8f0;
+        padding: 16px 24px;
+        background: var(--bg-panel);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
       }
 
-      .badge {
-        display: inline-flex;
+      .brand {
+        display: flex;
         align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        background: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        color: #047857;
-        font-size: 0.725rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
+        gap: 12px;
       }
 
-      .badge::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #10b981;
-      }
-
-      .tabs {
-        display: inline-flex;
-        background: #f1f5f9;
-        padding: 3px;
+      .brand-icon {
+        width: 42px;
+        height: 42px;
         border-radius: 12px;
-        gap: 2px;
-        border: 1px solid #e2e8f0;
+        background: var(--primary-gradient);
+        display: grid;
+        place-items: center;
+        font-size: 1.25rem;
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
       }
 
-      .tab-btn {
-        padding: 7px 14px;
+      .brand-text h1 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .brand-text p {
+        font-size: 0.75rem;
+        color: var(--text-sub);
+        font-weight: 600;
+      }
+
+      .nav-pills {
+        display: flex;
+        background: rgba(0, 0, 0, 0.35);
+        padding: 4px;
+        border-radius: 14px;
+        gap: 4px;
+        border: 1px solid var(--border-glass);
+      }
+
+      .nav-btn {
+        padding: 8px 18px;
         border: 0;
-        border-radius: 9px;
+        border-radius: 10px;
         background: transparent;
-        color: #64748b;
+        color: var(--text-sub);
         font-family: inherit;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 700;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .nav-btn:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .nav-btn.active {
+        background: var(--primary-gradient);
+        color: #ffffff;
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.35);
+      }
+
+      .badge-counter {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        padding: 1px 7px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+      }
+
+      .badge-counter.alert {
+        background: #ef4444;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #34d399;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        padding: 6px 14px;
+        border-radius: 9999px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 10px #10b981;
+      }
+
+      /* MAIN VIEW CONTAINERS */
+      .view-panel {
+        background: var(--bg-panel);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border-glass);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+      }
+
+      /* VIEW 1: ADVANCED CHAT STUDIO */
+      .chat-studio {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        height: 720px;
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid var(--border-glass);
+        background: rgba(8, 13, 24, 0.75);
+      }
+
+      /* Left Sidebar: Client List */
+      .chat-sidebar {
+        border-right: 1px solid var(--border-glass);
+        display: flex;
+        flex-direction: column;
+        background: rgba(10, 16, 30, 0.85);
+      }
+
+      .sidebar-header {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-glass);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .sidebar-header h2 {
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--text-sub);
+      }
+
+      .icon-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        color: var(--text-bright);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        cursor: pointer;
         transition: all 0.15s ease;
       }
 
-      .tab-btn:hover {
-        color: #0f172a;
+      .icon-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
-      .tab-btn.active {
-        background: #ffffff;
-        color: #0284c7;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      .clients-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
 
-      .tab-count {
-        background: #e2e8f0;
-        color: #475569;
-        padding: 1px 6px;
-        border-radius: 9999px;
-        font-size: 0.7rem;
+      .client-item {
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
       }
 
-      .tab-btn.active .tab-count {
-        background: #e0f2fe;
-        color: #0369a1;
+      .client-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.08);
       }
 
-      .header {
-        margin-bottom: 20px;
+      .client-item.active {
+        background: rgba(14, 165, 233, 0.12);
+        border-color: rgba(56, 189, 248, 0.35);
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.15);
       }
 
-      h1 {
-        font-size: 1.45rem;
+      .client-item-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .client-name {
+        font-size: 0.875rem;
+        font-weight: 750;
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+
+      .client-item.active .client-name {
+        color: var(--primary-glow);
+      }
+
+      .unread-badge {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.65rem;
         font-weight: 800;
-        color: #0f172a;
-        letter-spacing: -0.5px;
+        padding: 2px 7px;
+        border-radius: 9999px;
       }
 
-      .intro {
-        color: #64748b;
-        font-size: 0.85rem;
+      .client-hardware {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .client-snippet {
+        font-size: 0.75rem;
+        color: var(--text-sub);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Right Main Chat Frame */
+      .chat-main {
+        display: flex;
+        flex-direction: column;
+        background: rgba(8, 13, 24, 0.95);
+      }
+
+      .chat-active-bar {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border-glass);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(15, 23, 42, 0.6);
+      }
+
+      .active-info h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .active-meta {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        color: var(--text-sub);
         margin-top: 3px;
-        line-height: 1.45;
+      }
+
+      .terminal-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .action-pill-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.75rem;
+        font-weight: 750;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+      }
+
+      .action-pill-btn.danger {
+        background: rgba(239, 68, 68, 0.12);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.25);
+      }
+
+      .action-pill-btn.danger:hover {
+        background: rgba(239, 68, 68, 0.25);
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.45);
+      }
+
+      .action-pill-btn.success {
+        background: rgba(16, 185, 129, 0.12);
+        color: #34d399;
+        border-color: rgba(16, 185, 129, 0.25);
+      }
+
+      .action-pill-btn.success:hover {
+        background: rgba(16, 185, 129, 0.25);
+        color: #6ee7b7;
+      }
+
+      .action-pill-btn.primary {
+        background: rgba(14, 165, 233, 0.12);
+        color: #38bdf8;
+        border-color: rgba(56, 189, 248, 0.25);
+      }
+
+      .action-pill-btn.primary:hover {
+        background: rgba(14, 165, 233, 0.25);
+      }
+
+      /* Conversation Log Area */
+      .messages-log {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .chat-row {
+        display: flex;
+        flex-direction: column;
+        max-width: 75%;
+      }
+
+      .chat-row.developer {
+        align-self: flex-end;
+      }
+
+      .chat-row.client {
+        align-self: flex-start;
+      }
+
+      .message-bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .chat-row.developer .message-bubble {
+        background: var(--primary-gradient);
+        color: #ffffff;
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25);
+      }
+
+      .chat-row.client .message-bubble {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-glass);
+        color: var(--text-bright);
+        border-bottom-left-radius: 4px;
+      }
+
+      .message-meta {
+        font-size: 0.68rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+        padding: 0 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .chat-row.developer .message-meta {
+        justify-content: flex-end;
+      }
+
+      /* Canned Quick Actions Bar */
+      .quick-actions-bar {
+        padding: 8px 16px;
+        border-top: 1px solid var(--border-glass);
+        background: rgba(15, 23, 42, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        overflow-x: auto;
+      }
+
+      .quick-action-chip {
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-glass);
+        color: var(--text-sub);
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s ease;
+      }
+
+      .quick-action-chip:hover {
+        background: rgba(14, 165, 233, 0.15);
+        border-color: rgba(56, 189, 248, 0.3);
+        color: #ffffff;
+      }
+
+      /* Chat Input Bar */
+      .chat-input-bar {
+        padding: 16px 20px;
+        border-top: 1px solid var(--border-glass);
+        background: rgba(15, 23, 42, 0.7);
+        display: flex;
+        gap: 10px;
+      }
+
+      .chat-textarea {
+        flex: 1;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-glass);
+        background: rgba(0, 0, 0, 0.4);
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 0.85rem;
+        resize: none;
+        outline: none;
+        transition: border-color 0.15s ease;
+      }
+
+      .chat-textarea:focus {
+        border-color: var(--primary-glow);
+        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+      }
+
+      .send-btn {
+        padding: 0 24px;
+        border-radius: 12px;
+        border: 0;
+        background: var(--primary-gradient);
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 750;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        transition: all 0.15s ease;
+      }
+
+      .send-btn:hover {
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+        transform: translateY(-1px);
+      }
+
+      .send-btn:active {
+        transform: translateY(0);
+      }
+
+      /* VIEW 2: KEY GENERATOR */
+      .panel-header {
+        margin-bottom: 24px;
+      }
+
+      .panel-header h2 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        color: #ffffff;
+      }
+
+      .panel-header p {
+        color: var(--text-sub);
+        font-size: 0.85rem;
+        margin-top: 4px;
       }
 
       form {
         display: grid;
-        gap: 13px;
+        gap: 16px;
       }
 
       .grid-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 16px;
       }
 
       label {
         display: grid;
-        gap: 4px;
+        gap: 6px;
         font-size: 0.8rem;
-        font-weight: 650;
-        color: #334155;
-      }
-
-      label[hidden] {
-        display: none;
+        font-weight: 700;
+        color: var(--text-sub);
       }
 
       input,
       select {
         width: 100%;
-        padding: 9px 12px;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        background: #f8fafc;
-        color: #0f172a;
+        padding: 11px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-glass);
+        background: rgba(0, 0, 0, 0.35);
+        color: #ffffff;
         font-family: inherit;
-        font-size: 0.875rem;
-        font-weight: 500;
+        font-size: 0.9rem;
+        outline: none;
         transition: all 0.15s ease;
       }
 
       input:focus,
       select:focus {
-        outline: none;
-        background: #ffffff;
-        border-color: #0284c7;
-        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        border-color: var(--primary-glow);
+        background: rgba(0, 0, 0, 0.5);
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
       }
 
       input[readonly] {
-        background: #f1f5f9;
-        color: #475569;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-muted);
         cursor: not-allowed;
       }
 
-      button {
-        min-height: 42px;
+      .main-cta-btn {
+        padding: 14px 24px;
+        border-radius: 12px;
         border: 0;
-        border-radius: 10px;
-        background: #0284c7;
-        color: white;
+        background: var(--primary-gradient);
+        color: #ffffff;
         font-family: inherit;
-        font-size: 0.875rem;
-        font-weight: 700;
+        font-size: 0.925rem;
+        font-weight: 800;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
         transition: all 0.15s ease;
       }
 
-      button:hover {
-        background: #0369a1;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+      .main-cta-btn:hover {
+        box-shadow: 0 8px 25px rgba(14, 165, 233, 0.5);
+        transform: translateY(-1px);
       }
 
-      button:active {
-        transform: scale(0.99);
+      /* Key Generation Output Card */
+      .generated-output-box {
+        margin-top: 24px;
+        padding: 20px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
       }
 
-      button:disabled {
-        cursor: wait;
-        opacity: 0.7;
-      }
-
-      button.secondary {
-        border: 1px solid #cbd5e1;
-        background: #ffffff;
-        color: #334155;
-      }
-
-      button.secondary:hover {
-        background: #f8fafc;
-        border-color: #94a3b8;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-      }
-
-      button.danger {
-        border: 1px solid #fecaca;
-        background: #fff;
-        color: #dc2626;
-      }
-
-      button.danger:hover {
-        background: #fef2f2;
-        border-color: #fca5a5;
-      }
-
-      .message {
-        padding: 10px 14px;
-        border-radius: 10px;
-        font-size: 0.825rem;
-        font-weight: 600;
-        margin-top: 14px;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #b91c1c;
-      }
-
-      .message.success {
-        background: #ecfdf5;
-        border-color: #a7f3d0;
-        color: #047857;
-      }
-
-      #result {
-        display: grid;
-        gap: 12px;
-        margin-top: 18px;
-        padding-top: 18px;
-        border-top: 1px solid #e2e8f0;
-        animation: fadeIn 0.25s ease;
-      }
-
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .key-box {
-        background: #090d16;
-        border: 1px solid #1e293b;
-        border-radius: 12px;
-        padding: 14px 16px;
-        text-align: center;
-      }
-
-      .key-label {
-        font-size: 0.725rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
+      .output-label {
+        font-size: 0.75rem;
+        font-weight: 800;
         text-transform: uppercase;
-        color: #94a3b8;
-        margin-bottom: 6px;
+        letter-spacing: 0.8px;
+        color: var(--primary-glow);
       }
 
-      .activation-key {
+      .key-display {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #34d399;
-        letter-spacing: 1.5px;
-        word-break: break-all;
-        background: transparent;
-        border: none;
-        width: 100%;
-        text-align: center;
-        resize: none;
-        outline: none;
-      }
-
-      .note {
-        font-size: 0.775rem;
-        color: #475569;
-        white-space: pre-line;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        font-size: 1.4rem;
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #38bdf8;
+        padding: 14px;
+        background: rgba(0, 0, 0, 0.6);
         border-radius: 10px;
-        padding: 12px 14px;
-        line-height: 1.6;
-        font-family: 'JetBrains Mono', monospace;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        text-align: center;
+        word-break: break-all;
       }
 
-      .btn-group {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+      .btn-row {
+        display: flex;
+        gap: 10px;
       }
 
-      /* CLIENT MANAGER TAB STYLING */
+      .secondary-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border-glass);
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 0.8rem;
+        font-weight: 750;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .secondary-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      /* VIEW 3: SAVED CLIENT KEYS TABLE & CARDS */
       .manager-toolbar {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
+        gap: 14px;
+        margin-bottom: 20px;
       }
 
-      .search-box {
+      .search-container {
         flex: 1;
-        min-width: 200px;
         position: relative;
       }
 
-      .search-box input {
-        padding-left: 32px;
+      .search-container input {
+        padding-left: 40px;
       }
 
       .search-icon {
         position: absolute;
-        left: 10px;
+        left: 14px;
         top: 50%;
         transform: translateY(-50%);
-        color: #94a3b8;
-        font-size: 0.85rem;
-        pointer-events: none;
+        color: var(--text-muted);
       }
 
-      .toolbar-actions {
+      .cards-grid {
         display: flex;
-        gap: 8px;
-      }
-
-      .toolbar-btn {
-        min-height: 36px;
-        padding: 0 12px;
-        font-size: 0.75rem;
-      }
-
-      .licenses-list {
-        display: grid;
+        flex-direction: column;
         gap: 12px;
-        max-height: 520px;
-        overflow-y: auto;
-        padding-right: 4px;
       }
 
-      .license-card {
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 16px;
-        background: #f8fafc;
+      .key-card {
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-glass);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
         transition: all 0.15s ease;
       }
 
-      .license-card:hover {
-        background: #ffffff;
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+      .key-card:hover {
+        border-color: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
       }
 
-      .card-top {
+      .key-card-header {
         display: flex;
-        justify-content: space-between;
         align-items: flex-start;
-        gap: 10px;
-        margin-bottom: 8px;
+        justify-content: space-between;
       }
 
-      .client-title {
+      .client-heading {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #ffffff;
+      }
+
+      .client-subhead {
+        font-size: 0.75rem;
+        color: var(--text-sub);
+        margin-top: 2px;
+      }
+
+      .status-tag {
+        padding: 3px 10px;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .status-tag.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      .status-tag.deactivated {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .status-tag.expired {
+        background: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      .key-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .key-strip code {
+        font-family: 'JetBrains Mono', monospace;
         font-size: 0.95rem;
         font-weight: 700;
-        color: #0f172a;
-      }
-
-      .client-meta {
-        font-size: 0.775rem;
-        color: #64748b;
-        margin-top: 1px;
-      }
-
-      .chip-group {
-        display: flex;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-
-      .chip {
-        padding: 2px 8px;
-        border-radius: 9999px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-
-      .chip-active {
-        background: #ecfdf5;
-        border: 1px solid #a7f3d0;
-        color: #047857;
-      }
-
-      .chip-expired {
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        color: #b91c1c;
-      }
-
-      .chip-deactivated {
-        background: #fff1f2;
-        border: 1px solid #fda4af;
-        color: #e11d48;
-      }
-
-      .chip-type {
-        background: #e0f2fe;
-        border: 1px solid #bae6fd;
-        color: #0284c7;
-      }
-
-      .warning.sm-btn {
-        background: #fff1f2;
-        border: 1px solid #fecdd3;
-        color: #e11d48;
-      }
-
-      .warning.sm-btn:hover {
-        background: #ffe4e6;
-      }
-
-      .key-row {
-        background: #090d16;
-        border: 1px solid #1e293b;
-        border-radius: 10px;
-        padding: 8px 12px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        margin: 10px 0;
-      }
-
-      .key-text {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 0.925rem;
-        font-weight: 700;
-        color: #34d399;
+        color: #38bdf8;
         letter-spacing: 1px;
-        word-break: break-all;
       }
 
-      .card-actions {
+      .key-card-footer {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 10px;
         font-size: 0.75rem;
-        color: #64748b;
+        color: var(--text-muted);
       }
 
-      .action-btns {
+      .card-btns {
         display: flex;
         gap: 6px;
       }
 
-      .sm-btn {
-        min-height: 28px;
-        padding: 0 10px;
-        font-size: 0.725rem;
-        border-radius: 6px;
-      }
-
-      .empty-state {
+      .empty-placeholder {
+        padding: 40px;
         text-align: center;
-        padding: 36px 16px;
-        background: #f8fafc;
-        border: 1px dashed #cbd5e1;
-        border-radius: 14px;
-        color: #64748b;
+        color: var(--text-sub);
+        border: 1px dashed var(--border-glass);
+        border-radius: 16px;
       }
 
-      .empty-state p {
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-top: 6px;
-      }
-
-      @media (max-width: 580px) {
-        .card {
-          padding: 20px 16px;
+      @media (max-width: 860px) {
+        .chat-studio {
+          grid-template-columns: 1fr;
+          height: auto;
         }
-        .top-nav {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 12px;
+        .chat-sidebar {
+          max-height: 240px;
         }
-        .grid-2,
-        .btn-group {
+        .grid-2 {
           grid-template-columns: 1fr;
         }
-        .activation-key {
-          font-size: 1.05rem;
-        }
-        .card-top {
+        .top-navbar {
           flex-direction: column;
-        }
-        .card-actions {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 8px;
-        }
-        .key-row {
-          flex-direction: column;
+          gap: 14px;
           align-items: stretch;
-          text-align: center;
         }
-      }
-
-      /* LIVE CLIENT CHAT STYLES */
-      .card.chat-wide {
-        max-width: 980px;
-      }
-      .chat-container {
-        display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 0;
-        height: 560px;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        overflow: hidden;
-        background: #f8fafc;
-        margin-top: 14px;
-      }
-      .chat-threads-col {
-        border-right: 1px solid #e2e8f0;
-        display: flex;
-        flex-direction: column;
-        background: #ffffff;
-      }
-      .chat-threads-header {
-        padding: 12px 14px;
-        border-bottom: 1px solid #e2e8f0;
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #334155;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .chat-threads-list {
-        flex: 1;
-        overflow-y: auto;
-        padding: 8px;
-      }
-      .chat-thread-item {
-        padding: 10px 12px;
-        border-radius: 12px;
-        margin-bottom: 6px;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        border: 1px solid transparent;
-      }
-      .chat-thread-item:hover {
-        background: #f1f5f9;
-      }
-      .chat-thread-item.active {
-        background: #e0f2fe;
-        border-color: #bae6fd;
-      }
-      .chat-thread-name {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: #0f172a;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .chat-thread-badge {
-        background: #ef4444;
-        color: #ffffff;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 2px 6px;
-        border-radius: 9999px;
-      }
-      .chat-thread-sub {
-        font-size: 0.7rem;
-        color: #64748b;
-        font-family: 'JetBrains Mono', monospace;
-        margin-top: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .chat-thread-last {
-        font-size: 0.725rem;
-        color: #475569;
-        margin-top: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .chat-main-col {
-        display: flex;
-        flex-direction: column;
-        background: #ffffff;
-      }
-      .chat-main-header {
-        padding: 12px 16px;
-        border-bottom: 1px solid #e2e8f0;
-        background: #ffffff;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .chat-client-title {
-        font-size: 0.9rem;
-        font-weight: 800;
-        color: #0f172a;
-      }
-      .chat-client-meta {
-        font-size: 0.7rem;
-        color: #64748b;
-        font-family: 'JetBrains Mono', monospace;
-        margin-top: 2px;
-      }
-      .chat-msg-area {
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        background: #f8fafc;
-      }
-      .chat-bubble {
-        max-width: 80%;
-        padding: 10px 14px;
-        border-radius: 14px;
-        font-size: 0.8rem;
-        line-height: 1.45;
-        position: relative;
-        word-break: break-word;
-      }
-      .chat-bubble.client {
-        align-self: flex-start;
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        color: #1e293b;
-        border-top-left-radius: 4px;
-      }
-      .chat-bubble.developer {
-        align-self: flex-end;
-        background: linear-gradient(135deg, #0284c7, #4f46e5);
-        color: #ffffff;
-        border-top-right-radius: 4px;
-      }
-      .chat-bubble-meta {
-        font-size: 0.65rem;
-        opacity: 0.75;
-        margin-bottom: 4px;
-        font-weight: 600;
-      }
-      .chat-reply-bar {
-        padding: 12px 16px;
-        border-top: 1px solid #e2e8f0;
-        background: #ffffff;
-        display: flex;
-        gap: 8px;
-      }
-      .chat-reply-input {
-        flex: 1;
-        padding: 10px 14px;
-        border: 1px solid #cbd5e1;
-        border-radius: 10px;
-        font-family: inherit;
-        font-size: 0.825rem;
-        resize: none;
-      }
-      .chat-reply-input:focus {
-        outline: none;
-        border-color: #0284c7;
-      }
-      .chat-send-btn {
-        padding: 0 18px;
-        border: 0;
-        border-radius: 10px;
-        background: #0284c7;
-        color: #ffffff;
-        font-weight: 700;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: background 0.15s ease;
-      }
-      .chat-send-btn:hover {
-        background: #0369a1;
+        .nav-pills {
+          justify-content: center;
+        }
       }
     </style>
   </head>
   <body>
-    <main id="main-card" class="card">
-      <div class="top-nav">
-        <span class="badge">Vendor Portal</span>
-        <div class="tabs">
-          <button id="tab-gen" class="tab-btn active" type="button">
+    <div class="app-shell">
+      <!-- TOP COMMAND NAVIGATION BAR -->
+      <header class="top-navbar">
+        <div class="brand">
+          <div class="brand-icon">⚡</div>
+          <div class="brand-text">
+            <h1>Developer Vendor Console</h1>
+            <p>Cloud Licensing, Remote Deactivation &amp; Live Terminal Support</p>
+          </div>
+        </div>
+
+        <nav class="nav-pills">
+          <button id="nav-chat" class="nav-btn active" type="button">
+            <span>💬 Live Support Studio</span>
+            <span id="chat-alert-badge" class="badge-counter alert" style="display:none;">0</span>
+          </button>
+          <button id="nav-generator" class="nav-btn" type="button">
             <span>🔑 Generate Key</span>
           </button>
-          <button id="tab-mgr" class="tab-btn" type="button">
-            <span>📋 Saved Client Keys</span>
-            <span id="saved-count" class="tab-count">0</span>
+          <button id="nav-clients" class="nav-btn" type="button">
+            <span>📋 Client Terminals</span>
+            <span id="saved-clients-badge" class="badge-counter">0</span>
           </button>
-          <button id="tab-chat" class="tab-btn" type="button">
-            <span>💬 Live Support Chat</span>
-            <span id="chat-badge" class="tab-count" style="display:none;background:#ef4444;color:#fff;">0</span>
-          </button>
-        </div>
-      </div>
+        </nav>
 
-      <!-- VIEW 1: KEY GENERATION -->
-      <div id="view-generator">
-        <div class="header">
-          <h1>Offline License Generator</h1>
-          <p class="intro">Generate cryptographically signed 25-digit keys bound to client terminal hardware. Keys are auto-saved for future reference.</p>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Gateway Active</span>
+        </div>
+      </header>
+
+      <!-- VIEW 1: ADVANCED LIVE SUPPORT STUDIO (DEFAULT) -->
+      <main id="view-chat" class="view-panel">
+        <div class="chat-studio">
+          <!-- Left: Client Lab List -->
+          <aside class="chat-sidebar">
+            <div class="sidebar-header">
+              <h2>Connected Terminals</h2>
+              <button id="refresh-chat-btn" class="icon-btn" type="button">🔄 Refresh</button>
+            </div>
+            <div id="clients-list-container" class="clients-list">
+              <div class="empty-placeholder" style="padding: 20px;">
+                <p>Loading terminals...</p>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Right: Active Chat & Terminal Controls -->
+          <section class="chat-main">
+            <div id="chat-header" class="chat-active-bar">
+              <div class="active-info">
+                <h3 id="current-client-name">Select a Terminal</h3>
+                <div id="current-client-meta" class="active-meta">Select a client lab on the left to begin messaging</div>
+              </div>
+              <div id="current-client-actions" class="terminal-actions" style="display:none;">
+                <button id="quick-send-key-btn" class="action-pill-btn primary" type="button">
+                  🔑 Send 1-Yr Key
+                </button>
+                <button id="deactivate-terminal-btn" class="action-pill-btn danger" type="button">
+                  🛑 Deactivate Terminal
+                </button>
+              </div>
+            </div>
+
+            <!-- Messages Log -->
+            <div id="messages-log" class="messages-log">
+              <div class="empty-placeholder" style="margin: auto;">
+                <p>Select a client terminal from the left list to read messages and assist.</p>
+              </div>
+            </div>
+
+            <!-- Canned Quick Responses Bar -->
+            <div id="quick-actions-bar" class="quick-actions-bar" style="display:none;">
+              <span style="font-size:0.7rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;">Quick Actions:</span>
+              <button class="quick-action-chip" type="button" onclick="insertCanned('Hello! We are here to help. What issue are you experiencing with your laboratory system?')">
+                👋 Greeting
+              </button>
+              <button class="quick-action-chip" type="button" onclick="insertCanned('Please click on Settings > About to confirm your Device ID so we can verify your license.')">
+                🔍 Check Device ID
+              </button>
+              <button class="quick-action-chip" type="button" onclick="insertCanned('We have refreshed your license. Please click Activate or reopen the app to continue.')">
+                ✅ License Refreshed
+              </button>
+              <button class="quick-action-chip" type="button" onclick="insertCanned('Your database backup is safe in your non-OS drive. You can restore it anytime via Settings > Backup.')">
+                💾 Backup Notice
+              </button>
+            </div>
+
+            <!-- Message Input Bar -->
+            <form id="chat-send-form" class="chat-input-bar" style="display:none;">
+              <textarea id="chat-input" class="chat-textarea" rows="2" placeholder="Type a message or response to this lab client... (Press Enter to send)"></textarea>
+              <button id="chat-submit-btn" class="send-btn" type="submit">Send</button>
+            </form>
+          </section>
+        </div>
+      </main>
+
+      <!-- VIEW 2: KEY GENERATOR VIEW -->
+      <section id="view-generator" class="view-panel" style="display:none;">
+        <div class="panel-header">
+          <h2>Offline 25-Digit License Generator</h2>
+          <p>Generate cryptographically signed 25-digit activation keys bound to the client's Windows Device ID and physical MAC address.</p>
         </div>
 
         <form id="license-form">
           <label>
-            Admin Security Password *
-            <input id="admin-token" type="password" placeholder="Enter generator password" autocomplete="current-password" required>
+            Developer Admin Password *
+            <input id="admin-token" type="password" placeholder="Enter generator password (default: admin123)" autocomplete="current-password" required>
           </label>
 
           <div class="grid-2">
             <label>
-              Client / Organization Name *
-              <input id="issued-to" type="text" placeholder="e.g. Apex Clinical Laboratory" maxlength="120" autocomplete="name" required>
+              Client / Laboratory Name *
+              <input id="issued-to" type="text" placeholder="e.g. Apex Clinical Diagnostic Laboratory" maxlength="120" required>
             </label>
             <label>
-              Contact (Phone / Email)
-              <input id="contact" type="text" placeholder="e.g. +91 9876543210" maxlength="120" autocomplete="off">
+              Client Contact (Phone / Email)
+              <input id="contact" type="text" placeholder="e.g. +91 9876543210" maxlength="120">
             </label>
           </div>
 
           <label>
             Client Terminal Device ID (Hardware Lock) *
-            <input id="device-id" type="text" placeholder="Enter Client Device ID from their settings" maxlength="128" autocomplete="off" required>
+            <input id="device-id" type="text" placeholder="Enter Client Device ID from their settings or live chat" maxlength="128" required>
           </label>
 
           <div class="grid-2">
             <label>
-              License Action
+              License Type
               <select id="license-type">
                 <option value="new">New Activation</option>
                 <option value="renewal">License Renewal</option>
@@ -795,121 +993,65 @@
                 <option value="1-year" selected>1 Year (Annual)</option>
                 <option value="2-years">2 Years</option>
                 <option value="custom-days">Custom Days</option>
-                <option value="deactivate">🚫 Deactivate / Revoke Key (0 Days)</option>
+                <option value="deactivate">🛑 Deactivate / Revoke Key (0 Days)</option>
               </select>
             </label>
           </div>
 
-          <label id="custom-days-field" hidden>
-            Custom Duration (Exact Days: 1 to 9999) *
-            <div style="display:flex;gap:10px;align-items:center;margin-top:2px;">
-              <input id="custom-days" type="number" min="1" max="9999" step="1" placeholder="e.g. 10, 15, 30, 45, 90, 120" inputmode="numeric" style="flex:1;">
-              <span id="custom-days-badge" style="font-size:0.75rem;font-weight:700;color:#0284c7;background:#e0f2fe;padding:6px 12px;border-radius:8px;border:1px solid #bae6fd;white-space:nowrap;">30 Days</span>
-            </div>
+          <label id="custom-days-wrapper" style="display:none;">
+            Custom Days (1 to 9999)
+            <input id="custom-days" type="number" min="1" max="9999" value="30">
           </label>
 
           <label>
-            Calculated Expiry Date (Machine Locked)
+            Calculated Expiry Date
             <input id="expires-at" type="date" readonly required>
           </label>
 
-          <button id="generate-button" type="submit">
-            Generate 25-Digit License Key
+          <button id="generate-key-btn" class="main-cta-btn" type="submit">
+            ⚡ Generate 25-Digit License Key
           </button>
         </form>
 
-        <p id="message" class="message" role="alert" hidden></p>
-
-        <section id="result" hidden>
-          <div class="key-box">
-            <div class="key-label">25-Digit License Key (Give to Client)</div>
-            <textarea id="activation-key" class="activation-key" rows="1" readonly></textarea>
+        <div id="generated-output-box" class="generated-output-box" style="display:none;">
+          <div class="output-label">Generated 25-Digit License Key</div>
+          <div id="key-output" class="key-display">XXXXX-XXXXX-XXXXX-XXXXX-XXXXX</div>
+          <div class="btn-row">
+            <button id="copy-key-btn" class="secondary-btn" type="button">📋 Copy Key Only</button>
+            <button id="copy-summary-btn" class="secondary-btn" type="button">📄 Copy Full Client Receipt</button>
+            <button id="send-to-chat-btn" class="secondary-btn" type="button" style="background:var(--primary-gradient);">💬 Send Directly to Active Chat</button>
           </div>
+          <div id="output-meta" style="font-size:0.75rem;color:var(--text-sub);white-space:pre-wrap;font-family:'JetBrains Mono', monospace;"></div>
+        </div>
+      </section>
 
-          <div class="btn-group">
-            <button id="copy-button" type="button">Copy 25-Digit Key</button>
-            <button id="copy-details-button" class="secondary" type="button">Copy Full Summary</button>
-          </div>
-
-          <div id="expiry-note" class="note"></div>
-        </section>
-      </div>
-
-      <!-- VIEW 2: SAVED CLIENT LICENSES MANAGER -->
-      <div id="view-manager" hidden>
-        <div class="header">
-          <h1>Saved Client Licenses</h1>
-          <p class="intro">Reference and manage all 25-digit keys issued to laboratories. Keys are permanently saved here for quick lookup and renewal.</p>
+      <!-- VIEW 3: SAVED CLIENT TERMINALS MANAGER -->
+      <section id="view-clients" class="view-panel" style="display:none;">
+        <div class="panel-header">
+          <h2>Registered Client Terminals &amp; Licenses</h2>
+          <p>Monitor all keys, verify active status, revoke or deactivate client terminals over the internet, and re-activate when needed.</p>
         </div>
 
         <div class="manager-toolbar">
-          <div class="search-box">
+          <div class="search-container">
             <span class="search-icon">🔍</span>
-            <input id="search-input" type="text" placeholder="Search by client name, contact, device ID, or key...">
+            <input id="search-clients-input" type="text" placeholder="Search by client name, hardware Device ID, contact, or 25-digit key...">
           </div>
-          <div class="toolbar-actions">
-            <button id="sync-btn" class="secondary toolbar-btn" type="button" title="Sync records with server">
-              🔄 Sync
-            </button>
-            <button id="export-csv-btn" class="secondary toolbar-btn" type="button">
-              📥 Export CSV
-            </button>
+          <div style="display:flex;gap:8px;">
+            <button id="sync-records-btn" class="icon-btn" type="button">🔄 Sync Server</button>
+            <button id="export-csv-btn" class="icon-btn" type="button">📥 Export CSV</button>
           </div>
         </div>
 
-        <div id="licenses-container" class="licenses-list">
-          <!-- Dynamically populated -->
+        <div id="clients-cards-container" class="cards-grid">
+          <!-- Dynamically Populated -->
         </div>
-      </div>
-
-      <!-- VIEW 3: LIVE CLIENT SUPPORT CHAT -->
-      <div id="view-chat" hidden>
-        <div class="header">
-          <h1>Live Client Support Chat</h1>
-          <p class="intro">Real-time two-way messaging with client laboratory terminals over the internet. View client device IDs, diagnose questions, and provide immediate assistance.</p>
-        </div>
-
-        <div class="chat-container">
-          <!-- Left Column: Connected Lab Clients -->
-          <div class="chat-threads-col">
-            <div class="chat-threads-header">
-              <span>Client Labs</span>
-              <button id="refresh-chat-btn" class="secondary" style="padding:2px 8px;font-size:0.7rem;cursor:pointer;" type="button">🔄 Refresh</button>
-            </div>
-            <div id="chat-threads-list" class="chat-threads-list">
-              <div class="empty-state" style="padding:24px 12px;">
-                <p>Loading active chats...</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right Column: Active Conversation -->
-          <div class="chat-main-col">
-            <div id="chat-active-header" class="chat-main-header">
-              <div>
-                <div id="chat-header-title" class="chat-client-title">Select a Client Lab</div>
-                <div id="chat-header-meta" class="chat-client-meta">No client selected</div>
-              </div>
-            </div>
-
-            <div id="chat-msg-area" class="chat-msg-area">
-              <div class="empty-state" style="margin:auto;">
-                <p>Select a client from the left panel to view and reply to messages.</p>
-              </div>
-            </div>
-
-            <form id="chat-reply-form" class="chat-reply-bar" style="display:none;">
-              <textarea id="chat-reply-input" class="chat-reply-input" rows="1" placeholder="Type your reply to this client... (Enter to send)"></textarea>
-              <button id="chat-reply-send" class="chat-send-btn" type="submit">Send</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </main>
+      </section>
+    </div>
 
     <script>
       const STORAGE_KEY = 'vendor_saved_licenses_v1';
-      const TOKEN_STORAGE_KEY = 'vendor_admin_token_cache';
+      const TOKEN_KEY = 'vendor_admin_token_cache';
 
       function getApiUrl(path) {
         if (window.location && window.location.protocol.startsWith('http')) {
@@ -918,293 +1060,90 @@
         return `http://localhost:3055${path}`;
       }
 
-      // Elements
-      const mainCard = document.querySelector('#main-card');
-      const tabGen = document.querySelector('#tab-gen');
-      const tabMgr = document.querySelector('#tab-mgr');
-      const tabChat = document.querySelector('#tab-chat');
-      const viewGen = document.querySelector('#view-generator');
-      const viewMgr = document.querySelector('#view-manager');
+      // DOM Elements
+      const navChat = document.querySelector('#nav-chat');
+      const navGenerator = document.querySelector('#nav-generator');
+      const navClients = document.querySelector('#nav-clients');
+
       const viewChat = document.querySelector('#view-chat');
-      const savedCountBadge = document.querySelector('#saved-count');
-      const chatBadge = document.querySelector('#chat-badge');
+      const viewGenerator = document.querySelector('#view-generator');
+      const viewClients = document.querySelector('#view-clients');
 
-      // Live Chat Elements
+      const chatAlertBadge = document.querySelector('#chat-alert-badge');
+      const savedClientsBadge = document.querySelector('#saved-clients-badge');
+
+      // Chat DOM
+      const clientsListContainer = document.querySelector('#clients-list-container');
       const refreshChatBtn = document.querySelector('#refresh-chat-btn');
-      const chatThreadsList = document.querySelector('#chat-threads-list');
-      const chatHeaderTitle = document.querySelector('#chat-header-title');
-      const chatHeaderMeta = document.querySelector('#chat-header-meta');
-      const chatMsgArea = document.querySelector('#chat-msg-area');
-      const chatReplyForm = document.querySelector('#chat-reply-form');
-      const chatReplyInput = document.querySelector('#chat-reply-input');
-      const chatReplySend = document.querySelector('#chat-reply-send');
+      const currentClientName = document.querySelector('#current-client-name');
+      const currentClientMeta = document.querySelector('#current-client-meta');
+      const currentClientActions = document.querySelector('#current-client-actions');
+      const quickSendKeyBtn = document.querySelector('#quick-send-key-btn');
+      const deactivateTerminalBtn = document.querySelector('#deactivate-terminal-btn');
+      const messagesLog = document.querySelector('#messages-log');
+      const quickActionsBar = document.querySelector('#quick-actions-bar');
+      const chatSendForm = document.querySelector('#chat-send-form');
+      const chatInput = document.querySelector('#chat-input');
+      const chatSubmitBtn = document.querySelector('#chat-submit-btn');
 
-      let activeChatClient = null;
-      let chatThreads = [];
-      let chatPollingTimer = null;
-
-      const form = document.querySelector('#license-form');
+      // Generator DOM
+      const licenseForm = document.querySelector('#license-form');
       const adminToken = document.querySelector('#admin-token');
       const issuedTo = document.querySelector('#issued-to');
       const contact = document.querySelector('#contact');
       const deviceId = document.querySelector('#device-id');
       const licenseType = document.querySelector('#license-type');
       const licenseDuration = document.querySelector('#license-duration');
-      const customDaysField = document.querySelector('#custom-days-field');
+      const customDaysWrapper = document.querySelector('#custom-days-wrapper');
       const customDays = document.querySelector('#custom-days');
       const expiresAt = document.querySelector('#expires-at');
-      const generateButton = document.querySelector('#generate-button');
-      const message = document.querySelector('#message');
-      const result = document.querySelector('#result');
-      const activationKey = document.querySelector('#activation-key');
-      const expiryNote = document.querySelector('#expiry-note');
-      const copyButton = document.querySelector('#copy-button');
-      const copyDetailsButton = document.querySelector('#copy-details-button');
+      const generateKeyBtn = document.querySelector('#generate-key-btn');
+      const generatedOutputBox = document.querySelector('#generated-output-box');
+      const keyOutput = document.querySelector('#key-output');
+      const copyKeyBtn = document.querySelector('#copy-key-btn');
+      const copySummaryBtn = document.querySelector('#copy-summary-btn');
+      const sendToChatBtn = document.querySelector('#send-to-chat-btn');
+      const outputMeta = document.querySelector('#output-meta');
 
-      const searchInput = document.querySelector('#search-input');
-      const syncBtn = document.querySelector('#sync-btn');
+      // Clients Manager DOM
+      const searchClientsInput = document.querySelector('#search-clients-input');
+      const syncRecordsBtn = document.querySelector('#sync-records-btn');
       const exportCsvBtn = document.querySelector('#export-csv-btn');
-      const licensesContainer = document.querySelector('#licenses-container');
+      const clientsCardsContainer = document.querySelector('#clients-cards-container');
 
-      let licenseDetails = '';
       let savedLicenses = [];
+      let chatThreads = [];
+      let activeChatClient = null;
+      let lastGeneratedReceipt = '';
 
-      // Load cached token from localStorage if present
+      // Load token
       try {
-        const cachedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
-        if (cachedToken) adminToken.value = cachedToken;
+        const cached = localStorage.getItem(TOKEN_KEY);
+        if (cached) adminToken.value = cached;
       } catch {}
 
-      // Tab Switching
-      tabGen.addEventListener('click', () => switchTab('gen'));
-      tabMgr.addEventListener('click', () => {
-        switchTab('mgr');
-        syncWithServer();
-      });
-      tabChat.addEventListener('click', () => {
-        switchTab('chat');
-        fetchChatThreads();
-      });
+      // Navigation
+      function setTab(tab) {
+        navChat.classList.toggle('active', tab === 'chat');
+        navGenerator.classList.toggle('active', tab === 'generator');
+        navClients.classList.toggle('active', tab === 'clients');
 
-      function switchTab(tab) {
-        tabGen.classList.toggle('active', tab === 'gen');
-        tabMgr.classList.toggle('active', tab === 'mgr');
-        tabChat.classList.toggle('active', tab === 'chat');
+        viewChat.style.display = tab === 'chat' ? 'block' : 'none';
+        viewGenerator.style.display = tab === 'generator' ? 'block' : 'none';
+        viewClients.style.display = tab === 'clients' ? 'block' : 'none';
 
-        viewGen.hidden = tab !== 'gen';
-        viewMgr.hidden = tab !== 'mgr';
-        viewChat.hidden = tab !== 'chat';
-
-        mainCard.classList.remove('wide', 'chat-wide');
-        if (tab === 'mgr') {
-          mainCard.classList.add('wide');
-          renderSavedLicenses();
-        } else if (tab === 'chat') {
-          mainCard.classList.add('chat-wide');
+        if (tab === 'chat') {
+          fetchChatThreads();
+        } else if (tab === 'clients') {
+          syncServerRecords();
         }
       }
 
-      // Live Chat Functions
-      async function fetchChatThreads() {
-        try {
-          const res = await fetch(getApiUrl('/api/chat/threads'));
-          if (res.ok) {
-            const data = await res.json();
-            chatThreads = Array.isArray(data.threads) ? data.threads : [];
-            renderChatThreads();
-
-            // Total unread messages across all clients
-            const totalUnread = chatThreads.reduce((sum, t) => sum + (t.unreadCount || 0), 0);
-            if (totalUnread > 0) {
-              chatBadge.style.display = 'inline-flex';
-              chatBadge.textContent = String(totalUnread);
-            } else {
-              chatBadge.style.display = 'none';
-            }
-          }
-        } catch (err) {
-          console.error('Failed to fetch chat threads:', err);
-        }
-      }
-
-      function renderChatThreads() {
-        if (chatThreads.length === 0) {
-          chatThreadsList.innerHTML = `
-            <div class="empty-state" style="padding:28px 12px;">
-              <p>No active client chats yet.</p>
-              <span style="font-size:0.75rem;color:#94a3b8;margin-top:4px;display:block;">When clients message via their app, they appear here.</span>
-            </div>
-          `;
-          return;
-        }
-
-        chatThreadsList.innerHTML = chatThreads.map(t => {
-          const isActive = activeChatClient && activeChatClient.clientId === t.clientId;
-          const timeStr = t.lastMessage?.timestamp
-            ? new Date(t.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            : '';
-          return `
-            <div class="chat-thread-item ${isActive ? 'active' : ''}" onclick="selectChatClient('${t.clientId}')">
-              <div class="chat-thread-name">
-                <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.labName || 'Lab Client'}</span>
-                ${t.unreadCount > 0 ? `<span class="chat-thread-badge">${t.unreadCount}</span>` : `<span style="font-size:0.65rem;color:#94a3b8;">${timeStr}</span>`}
-              </div>
-              <div class="chat-thread-sub">DevID: ${t.deviceId ? t.deviceId.slice(0, 16) + '...' : t.clientId}</div>
-              <div class="chat-thread-last">${t.lastMessage ? (t.lastMessage.sender === 'developer' ? 'You: ' : '') + t.lastMessage.text : 'No messages'}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      async function selectChatClient(clientId) {
-        const client = chatThreads.find(t => t.clientId === clientId);
-        if (!client) return;
-        activeChatClient = client;
-        renderChatThreads();
-
-        chatHeaderTitle.textContent = client.labName || 'Diagnostic Lab Client';
-        chatHeaderMeta.textContent = `Device ID: ${client.deviceId || client.clientId} ${client.macAddress ? '• MAC: ' + client.macAddress : ''}`;
-        chatReplyForm.style.display = 'flex';
-
-        await loadActiveConversation();
-
-        // Mark as read on server
-        fetch(getApiUrl('/api/chat/read'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientId: client.clientId, reader: 'developer' })
-        }).then(() => fetchChatThreads()).catch(() => {});
-      }
-
-      async function loadActiveConversation() {
-        if (!activeChatClient) return;
-        try {
-          const res = await fetch(getApiUrl(`/api/chat/messages?clientId=${encodeURIComponent(activeChatClient.clientId)}`));
-          if (res.ok) {
-            const data = await res.json();
-            const msgs = Array.isArray(data.messages) ? data.messages : [];
-            renderMessages(msgs);
-          }
-        } catch (err) {
-          console.error('Failed to load conversation:', err);
-        }
-      }
-
-      function renderMessages(msgs) {
-        if (msgs.length === 0) {
-          chatMsgArea.innerHTML = `
-            <div class="empty-state" style="margin:auto;">
-              <p>No messages in this conversation yet.</p>
-            </div>
-          `;
-          return;
-        }
-
-        chatMsgArea.innerHTML = msgs.map(m => {
-          const isDev = m.sender === 'developer';
-          const time = m.timestamp
-            ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            : '';
-          return `
-            <div class="chat-bubble ${isDev ? 'developer' : 'client'}">
-              <div class="chat-bubble-meta">${isDev ? 'You (Developer)' : (m.senderName || 'Lab Client')} • ${time}</div>
-              <div>${escapeHtml(m.text)}</div>
-            </div>
-          `;
-        }).join('');
-
-        chatMsgArea.scrollTop = chatMsgArea.scrollHeight;
-      }
-
-      function escapeHtml(str) {
-        return String(str || '').replace(/[&<>"']/g, function(m) {
-          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-        });
-      }
-
-      // Handle reply submission
-      chatReplyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const text = chatReplyInput.value.trim();
-        if (!text || !activeChatClient) return;
-
-        chatReplyInput.value = '';
-        chatReplySend.disabled = true;
-
-        try {
-          const res = await fetch(getApiUrl('/api/chat/send'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              clientId: activeChatClient.clientId,
-              sender: 'developer',
-              senderName: 'Developer Support',
-              text: text,
-              labName: activeChatClient.labName,
-              deviceId: activeChatClient.deviceId
-            })
-          });
-
-          if (res.ok) {
-            await loadActiveConversation();
-            await fetchChatThreads();
-          }
-        } catch (err) {
-          alert('Failed to send reply: ' + err.message);
-        } finally {
-          chatReplySend.disabled = false;
-          chatReplyInput.focus();
-        }
-      });
-
-      refreshChatBtn.addEventListener('click', () => {
-        fetchChatThreads();
-        if (activeChatClient) loadActiveConversation();
-      });
-
-      // Real-time background poll for chat threads every 1.5 seconds
-      setInterval(() => {
-        fetchChatThreads();
-        if (activeChatClient && !viewChat.hidden) {
-          loadActiveConversation();
-        }
-      }, 1500);
-
-      // Storage helpers
-      function getLocalLicenses() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : [];
-        } catch {
-          return [];
-        }
-      }
-
-      function setLocalLicenses(list) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-        } catch {}
-        savedLicenses = list;
-        updateBadgeCount();
-      }
-
-      function updateBadgeCount() {
-        savedCountBadge.textContent = String(savedLicenses.length);
-      }
-
-      // Initialize saved licenses from cache
-      savedLicenses = getLocalLicenses();
-      updateBadgeCount();
+      navChat.addEventListener('click', () => setTab('chat'));
+      navGenerator.addEventListener('click', () => setTab('generator'));
+      navClients.addEventListener('click', () => setTab('clients'));
 
       // Date calculations
-      function formatDate(date) {
-        if (Number.isNaN(date.getTime())) return '';
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(date.getUTCDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-
       function addMonths(date, months) {
         const result = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
         result.setUTCMonth(result.getUTCMonth() + months);
@@ -1213,119 +1152,66 @@
         return result;
       }
 
-      function updateExpiryDate() {
+      function updateExpiry() {
         const today = new Date();
         today.setUTCHours(0, 0, 0, 0);
-        let expiryDate;
+        let target;
         const dur = licenseDuration.value;
-        const badge = document.querySelector('#custom-days-badge');
 
         if (dur === 'custom-days') {
-          customDaysField.hidden = false;
-          customDays.required = true;
-          if (!customDays.value) {
-            customDays.value = '30';
-          }
+          customDaysWrapper.style.display = 'block';
           const days = Math.max(1, Math.min(9999, parseInt(customDays.value, 10) || 30));
-          expiryDate = new Date(today);
-          expiryDate.setUTCDate(expiryDate.getUTCDate() + days);
-          if (badge) badge.textContent = `${days} Days`;
+          target = new Date(today);
+          target.setUTCDate(target.getUTCDate() + days);
         } else if (dur === 'deactivate') {
-          customDaysField.hidden = true;
-          customDays.required = false;
-          expiryDate = new Date(today);
+          customDaysWrapper.style.display = 'none';
+          target = new Date(today);
         } else {
-          customDaysField.hidden = true;
-          customDays.required = false;
+          customDaysWrapper.style.display = 'none';
           switch (dur) {
-            case '1-day':
-              expiryDate = new Date(today);
-              expiryDate.setUTCDate(expiryDate.getUTCDate() + 1);
-              break;
-            case '7-days':
-              expiryDate = new Date(today);
-              expiryDate.setUTCDate(expiryDate.getUTCDate() + 7);
-              break;
-            case '15-days':
-              expiryDate = new Date(today);
-              expiryDate.setUTCDate(expiryDate.getUTCDate() + 15);
-              break;
-            case '30-days':
-              expiryDate = new Date(today);
-              expiryDate.setUTCDate(expiryDate.getUTCDate() + 30);
-              break;
-            case '3-months':
-              expiryDate = addMonths(today, 3);
-              break;
-            case '6-months':
-              expiryDate = addMonths(today, 6);
-              break;
-            case '1-year':
-              expiryDate = addMonths(today, 12);
-              break;
-            case '2-years':
-              expiryDate = addMonths(today, 24);
-              break;
-            default:
-              expiryDate = addMonths(today, 12);
+            case '1-day': target = new Date(today); target.setUTCDate(target.getUTCDate() + 1); break;
+            case '7-days': target = new Date(today); target.setUTCDate(target.getUTCDate() + 7); break;
+            case '15-days': target = new Date(today); target.setUTCDate(target.getUTCDate() + 15); break;
+            case '30-days': target = new Date(today); target.setUTCDate(target.getUTCDate() + 30); break;
+            case '3-months': target = addMonths(today, 3); break;
+            case '6-months': target = addMonths(today, 6); break;
+            case '1-year': target = addMonths(today, 12); break;
+            case '2-years': target = addMonths(today, 24); break;
+            default: target = addMonths(today, 12);
           }
         }
-
-        expiresAt.value = formatDate(expiryDate);
+        expiresAt.value = target.toISOString().slice(0, 10);
       }
 
-      licenseDuration.addEventListener('change', () => {
-        updateExpiryDate();
-        if (licenseDuration.value === 'custom-days') {
-          customDays.focus();
-          customDays.select();
-        }
-      });
-      customDays.addEventListener('input', updateExpiryDate);
-      updateExpiryDate();
+      licenseDuration.addEventListener('change', updateExpiry);
+      customDays.addEventListener('input', updateExpiry);
+      updateExpiry();
 
-      // Key Generation Submit
-      form.addEventListener('submit', async event => {
-        event.preventDefault();
-        message.hidden = true;
-        result.hidden = true;
-        generateButton.disabled = true;
-        generateButton.textContent = 'Generating Secure Key...';
-
+      // Generator Submit
+      licenseForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         const token = adminToken.value.trim();
-        try {
-          localStorage.setItem(TOKEN_STORAGE_KEY, token);
-        } catch {}
+        try { localStorage.setItem(TOKEN_KEY, token); } catch {}
+
+        generateKeyBtn.disabled = true;
+        generateKeyBtn.textContent = '⚡ Generating Machine-Locked Key...';
 
         const dur = licenseDuration.value;
         const isDeact = dur === 'deactivate';
-        let calculatedDays = 365;
-        if (dur === 'custom-days') {
-          calculatedDays = Math.max(1, Math.min(9999, parseInt(customDays.value, 10) || 30));
-        } else if (dur === '1-day') {
-          calculatedDays = 1;
-        } else if (dur === '7-days') {
-          calculatedDays = 7;
-        } else if (dur === '15-days') {
-          calculatedDays = 15;
-        } else if (dur === '30-days') {
-          calculatedDays = 30;
-        } else if (dur === '3-months') {
-          calculatedDays = 90;
-        } else if (dur === '6-months') {
-          calculatedDays = 180;
-        } else if (dur === '1-year') {
-          calculatedDays = 365;
-        } else if (dur === '2-years') {
-          calculatedDays = 730;
-        } else if (isDeact) {
-          calculatedDays = 0;
-        }
-
-        const actionType = isDeact ? 'deactivate' : licenseType.value;
+        let days = 365;
+        if (dur === 'custom-days') days = parseInt(customDays.value, 10) || 30;
+        else if (dur === '1-day') days = 1;
+        else if (dur === '7-days') days = 7;
+        else if (dur === '15-days') days = 15;
+        else if (dur === '30-days') days = 30;
+        else if (dur === '3-months') days = 90;
+        else if (dur === '6-months') days = 180;
+        else if (dur === '1-year') days = 365;
+        else if (dur === '2-years') days = 730;
+        else if (isDeact) days = 0;
 
         try {
-          const response = await fetch(getApiUrl('/api/licenses'), {
+          const res = await fetch(getApiUrl('/api/licenses'), {
             method: 'POST',
             headers: {
               Authorization: `Bearer ${token}`,
@@ -1336,132 +1222,325 @@
               contact: contact.value.trim(),
               deviceId: deviceId.value.trim(),
               expiresAt: expiresAt.value,
-              licenseType: actionType,
-              customDays: calculatedDays
+              licenseType: isDeact ? 'deactivate' : licenseType.value,
+              customDays: days
             })
           });
-          const data = await response.json();
-          if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
 
-          activationKey.value = data.activationKey;
-          const issuedDate = new Date(data.issuedAt);
-          const details = [
-            `25-Digit License Key: ${data.activationKey}`,
-            `Action: ${data.licenseType === 'renewal' ? 'Renewal' : 'New activation'}`,
-            `Issued To: ${data.issuedTo}`,
-            data.contact ? `Contact: ${data.contact}` : null,
-            `Hardware Terminal ID: ${data.deviceId}`,
-            `Generated: ${issuedDate.toLocaleString()}`,
-            `Expires: ${data.expiresAt}`,
-            `Protection: Machine Locked & Anti-Clock Rollback Protected`
-          ].filter(Boolean);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Server error generating key');
 
-          licenseDetails = details.join('\n');
-          expiryNote.textContent = licenseDetails;
-          result.hidden = false;
+          keyOutput.textContent = data.activationKey;
+          generatedOutputBox.style.display = 'flex';
 
-          // Save into local list
-          const existing = getLocalLicenses().filter(l => l.activationKey !== data.activationKey);
+          lastGeneratedReceipt = [
+            `🔑 25-Digit License Key: ${data.activationKey}`,
+            `🏢 Organization: ${data.issuedTo}`,
+            data.contact ? `📞 Contact: ${data.contact}` : null,
+            `🖥️ Device ID: ${data.deviceId}`,
+            `📅 Validity: ${days} Days (Expires ${data.expiresAt})`,
+            `🛡️ Status: Valid & Anti-Clock Rollback Protected`
+          ].filter(Boolean).join('\n');
+
+          outputMeta.textContent = lastGeneratedReceipt;
+
+          // Save locally
+          const existing = savedLicenses.filter(l => l.activationKey !== data.activationKey);
           existing.unshift(data);
-          setLocalLicenses(existing);
+          savedLicenses = existing;
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedLicenses)); } catch {}
+          updateBadges();
 
-          message.textContent = 'Key generated and saved to Client Records! Provide the 25-digit key above to the customer.';
-          message.className = 'message success';
-          message.hidden = false;
-        } catch (error) {
-          message.textContent = error instanceof TypeError
-            ? 'Cannot reach license server. Confirm the Node.js backend is running and open this page from its HTTPS address.'
-            : error.message || 'Could not create activation key.';
-          message.className = 'message';
-          message.hidden = false;
+          alert('✅ License Key Generated Successfully!');
+        } catch (err) {
+          alert('❌ Generation Failed: ' + err.message);
         } finally {
-          generateButton.disabled = false;
-          generateButton.textContent = 'Generate 25-Digit License Key';
+          generateKeyBtn.disabled = false;
+          generateKeyBtn.textContent = '⚡ Generate 25-Digit License Key';
         }
       });
 
-      // Copy helpers
-      copyDetailsButton.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(licenseDetails);
-          message.textContent = 'Full license summary copied to clipboard.';
-          message.className = 'message success';
-        } catch (error) {
-          message.textContent = 'Select and copy the details from the box above.';
-          message.className = 'message';
-        }
-        message.hidden = false;
+      copyKeyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(keyOutput.textContent);
+        alert('Copied 25-digit key!');
       });
 
-      copyButton.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(activationKey.value);
-          message.textContent = '25-Digit Key copied to clipboard.';
-          message.className = 'message success';
-        } catch (error) {
-          activationKey.focus();
-          activationKey.select();
-          message.textContent = 'Select and copy the key above.';
-          message.className = 'message';
-        }
-        message.hidden = false;
+      copySummaryBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(lastGeneratedReceipt);
+        alert('Copied full receipt to clipboard!');
       });
 
-      // Sync with server
-      async function syncWithServer() {
-        const token = adminToken.value.trim();
-        if (!token) {
-          renderSavedLicenses();
+      sendToChatBtn.addEventListener('click', async () => {
+        if (!activeChatClient) {
+          alert('No chat client is currently selected. Switch to Live Support Studio and select a client.');
           return;
         }
-        syncBtn.textContent = '⏳ Syncing...';
+        await sendChatMessage(`Here is your official 25-digit activation key:\n\n${keyOutput.textContent}\n\nValid until: ${expiresAt.value}. Please enter it in your License Activation window.`);
+        alert(`Key dispatched to "${activeChatClient.labName}" chat thread!`);
+        setTab('chat');
+      });
+
+      // Quick canned message
+      window.insertCanned = function(text) {
+        chatInput.value = text;
+        chatInput.focus();
+      };
+
+      // LIVE SUPPORT STUDIO LOGIC
+      async function fetchChatThreads() {
+        try {
+          const res = await fetch(getApiUrl('/api/chat/threads'));
+          if (res.ok) {
+            const data = await res.json();
+            chatThreads = Array.isArray(data.threads) ? data.threads : [];
+            renderChatThreads();
+
+            const unread = chatThreads.reduce((s, t) => s + (t.unreadCount || 0), 0);
+            if (unread > 0) {
+              chatAlertBadge.style.display = 'inline-block';
+              chatAlertBadge.textContent = String(unread);
+            } else {
+              chatAlertBadge.style.display = 'none';
+            }
+          }
+        } catch {}
+      }
+
+      function renderChatThreads() {
+        if (chatThreads.length === 0) {
+          clientsListContainer.innerHTML = `
+            <div class="empty-placeholder" style="padding:20px;">
+              <p>No client terminals connected yet.</p>
+              <span style="font-size:0.7rem;color:var(--text-muted);">Terminals appear here when they send a chat or are active.</span>
+            </div>
+          `;
+          return;
+        }
+
+        clientsListContainer.innerHTML = chatThreads.map(t => {
+          const active = activeChatClient && activeChatClient.clientId === t.clientId;
+          const time = t.lastMessage?.timestamp
+            ? new Date(t.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+          return `
+            <div class="client-item ${active ? 'active' : ''}" onclick="selectTerminal('${t.clientId}')">
+              <div class="client-item-top">
+                <span class="client-name">${escapeHtml(t.labName || 'Lab Terminal')}</span>
+                ${t.unreadCount > 0 ? `<span class="unread-badge">${t.unreadCount}</span>` : `<span style="font-size:0.65rem;color:var(--text-muted);">${time}</span>`}
+              </div>
+              <div class="client-hardware">DevID: ${escapeHtml(t.deviceId || t.clientId)}</div>
+              <div class="client-snippet">${t.lastMessage ? (t.lastMessage.sender === 'developer' ? 'You: ' : '') + escapeHtml(t.lastMessage.text) : 'Connected'}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      window.selectTerminal = async function(clientId) {
+        const client = chatThreads.find(t => t.clientId === clientId);
+        if (!client) return;
+        activeChatClient = client;
+        renderChatThreads();
+
+        currentClientName.textContent = client.labName || 'Laboratory Terminal';
+        currentClientMeta.textContent = `Hardware Device ID: ${client.deviceId || client.clientId} ${client.macAddress ? '• MAC: ' + client.macAddress : ''}`;
+        currentClientActions.style.display = 'flex';
+        quickActionsBar.style.display = 'flex';
+        chatSendForm.style.display = 'flex';
+
+        // Auto-fill generator fields
+        deviceId.value = client.deviceId || '';
+        issuedTo.value = client.labName || '';
+
+        await loadConversation();
+
+        // Mark as read
+        fetch(getApiUrl('/api/chat/read'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId: client.clientId, reader: 'developer' })
+        }).then(() => fetchChatThreads()).catch(() => {});
+      };
+
+      async function loadConversation() {
+        if (!activeChatClient) return;
+        try {
+          const res = await fetch(getApiUrl(`/api/chat/messages?clientId=${encodeURIComponent(activeChatClient.clientId)}`));
+          if (res.ok) {
+            const data = await res.json();
+            const msgs = Array.isArray(data.messages) ? data.messages : [];
+            renderMessages(msgs);
+          }
+        } catch {}
+      }
+
+      function renderMessages(msgs) {
+        if (msgs.length === 0) {
+          messagesLog.innerHTML = `
+            <div class="empty-placeholder" style="margin:auto;">
+              <p>No messages yet in this terminal conversation.</p>
+            </div>
+          `;
+          return;
+        }
+
+        messagesLog.innerHTML = msgs.map(m => {
+          const isDev = m.sender === 'developer';
+          const time = m.timestamp
+            ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+          return `
+            <div class="chat-row ${isDev ? 'developer' : 'client'}">
+              <div class="message-bubble">${escapeHtml(m.text)}</div>
+              <div class="message-meta">
+                <span>${isDev ? 'Developer' : (m.senderName || 'Client')}</span>
+                <span>•</span>
+                <span>${time}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        messagesLog.scrollTop = messagesLog.scrollHeight;
+      }
+
+      async function sendChatMessage(text) {
+        if (!text || !activeChatClient) return;
+        try {
+          await fetch(getApiUrl('/api/chat/send'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientId: activeChatClient.clientId,
+              sender: 'developer',
+              senderName: 'Developer Console',
+              text: text,
+              labName: activeChatClient.labName,
+              deviceId: activeChatClient.deviceId
+            })
+          });
+          await loadConversation();
+          await fetchChatThreads();
+        } catch (e) {
+          alert('Could not deliver chat message: ' + e.message);
+        }
+      }
+
+      chatSendForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+        chatInput.value = '';
+        chatSubmitBtn.disabled = true;
+        await sendChatMessage(text);
+        chatSubmitBtn.disabled = false;
+        chatInput.focus();
+      });
+
+      chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          chatSendForm.dispatchEvent(new Event('submit'));
+        }
+      });
+
+      refreshChatBtn.addEventListener('click', () => {
+        fetchChatThreads();
+        if (activeChatClient) loadConversation();
+      });
+
+      // Quick 1-Year Key from Chat
+      quickSendKeyBtn.addEventListener('click', async () => {
+        if (!activeChatClient) return;
+        setTab('generator');
+        deviceId.value = activeChatClient.deviceId || '';
+        issuedTo.value = activeChatClient.labName || '';
+        licenseDuration.value = '1-year';
+        updateExpiry();
+        alert(`Form pre-filled for "${activeChatClient.labName}". Click "Generate 25-Digit License Key" to generate.`);
+      });
+
+      // 🛑 DEACTIVATE TERMINAL (REVOCATION OVER INTERNET)
+      deactivateTerminalBtn.addEventListener('click', async () => {
+        if (!activeChatClient) return;
+        const devId = activeChatClient.deviceId || activeChatClient.clientId;
+        const name = activeChatClient.labName || 'this terminal';
+
+        if (!confirm(`🛑 CRITICAL ACTION: DEACTIVATE TERMINAL?\n\nClient: ${name}\nDevice ID: ${devId}\n\nWhen this machine is connected to the internet, it will immediately lock and wipe its local activation license.`)) {
+          return;
+        }
+
+        let token = adminToken.value.trim();
+        if (!token) {
+          token = prompt('Enter Developer Password:');
+          if (token) {
+            adminToken.value = token;
+            try { localStorage.setItem(TOKEN_KEY, token); } catch {}
+          } else return;
+        }
+
+        try {
+          const res = await fetch(getApiUrl('/api/licenses/deactivate'), {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              deviceId: devId,
+              reason: `Remotely deactivated by developer from Live Support Console for ${name}`
+            })
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            await sendChatMessage('🛑 SYSTEM NOTICE: Your terminal license has been remotely deactivated by the developer. The software is locked.');
+            alert(`✅ Terminal "${devId}" successfully DEACTIVATED!\n\nThe client machine will immediately lock if connected to the internet.`);
+            syncServerRecords();
+          } else {
+            alert('Failed: ' + (data.error || 'Server error'));
+          }
+        } catch (err) {
+          alert('Network Error: ' + err.message);
+        }
+      });
+
+      // Background Poll: 1.5 seconds for instant updates
+      setInterval(() => {
+        fetchChatThreads();
+        if (activeChatClient && viewChat.style.display !== 'none') {
+          loadConversation();
+        }
+      }, 1500);
+
+      // CLIENTS MANAGER & SYNC
+      async function syncServerRecords() {
+        const token = adminToken.value.trim();
+        syncRecordsBtn.textContent = '⏳ Syncing...';
         try {
           const res = await fetch(getApiUrl('/api/licenses'), {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
           });
           if (res.ok) {
             const data = await res.json();
             if (Array.isArray(data.licenses)) {
-              // Merge local and server records (prefer newest)
-              const map = new Map();
-              data.licenses.forEach(item => map.set(item.activationKey || item.licenseId, item));
-              getLocalLicenses().forEach(item => {
-                const key = item.activationKey || item.licenseId;
-                if (!map.has(key)) map.set(key, item);
-              });
-              const merged = Array.from(map.values()).sort((a, b) => new Date(b.issuedAt) - new Date(a.issuedAt));
-              setLocalLicenses(merged);
+              savedLicenses = data.licenses;
+              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedLicenses)); } catch {}
             }
           }
-        } catch (e) {
-          console.warn('Could not sync with server:', e);
-        } finally {
-          syncBtn.textContent = '🔄 Sync';
-          renderSavedLicenses();
+        } catch {}
+        finally {
+          syncRecordsBtn.textContent = '🔄 Sync Server';
+          renderClientsTable();
+          updateBadges();
         }
       }
 
-      // Delete license
-      async function deleteLicense(key) {
-        if (!confirm('Are you sure you want to delete this saved client license record?')) return;
-        const filtered = savedLicenses.filter(l => l.activationKey !== key && l.licenseId !== key);
-        setLocalLicenses(filtered);
-        renderSavedLicenses();
-
-        const token = adminToken.value.trim();
-        if (token) {
-          try {
-            await fetch(getApiUrl(`/api/licenses?id=${encodeURIComponent(key)}`), {
-              method: 'DELETE',
-              headers: { Authorization: `Bearer ${token}` }
-            });
-          } catch {}
-        }
+      function updateBadges() {
+        savedClientsBadge.textContent = String(savedLicenses.length);
       }
 
-      // Render manager list
-      function renderSavedLicenses() {
-        const query = (searchInput.value || '').toLowerCase().trim();
+      function renderClientsTable() {
+        const query = (searchClientsInput.value || '').toLowerCase().trim();
         const filtered = savedLicenses.filter(item => {
           if (!query) return true;
           return (
@@ -1473,69 +1552,60 @@
         });
 
         if (filtered.length === 0) {
-          licensesContainer.innerHTML = `
-            <div class="empty-state">
-              <div style="font-size: 2rem; margin-bottom: 4px;">📂</div>
-              <p>${savedLicenses.length === 0 ? 'No client license records saved yet.' : 'No matching client records found.'}</p>
-              <span style="font-size: 0.775rem;">${savedLicenses.length === 0 ? 'Keys generated in the first tab will automatically appear here for reference.' : 'Try adjusting your search query.'}</span>
+          clientsCardsContainer.innerHTML = `
+            <div class="empty-placeholder">
+              <p>No client license records found.</p>
             </div>
           `;
           return;
         }
 
-        const todayStr = new Date().toISOString().slice(0, 10);
-        licensesContainer.innerHTML = filtered.map(item => {
-          const isDeactivated = Boolean(item.isDeactivated || item.licenseType === 'deactivate' || item.days === 0);
-          const isExpired = !isDeactivated && item.expiresAt <= todayStr;
-          const issuedDate = item.issuedAt ? new Date(item.issuedAt).toLocaleDateString() : 'N/A';
-          const typeLabel = item.licenseType === 'renewal' ? 'Renewal' : (item.licenseType === 'deactivate' ? 'Revocation' : 'New Key');
+        const today = new Date().toISOString().slice(0, 10);
+        clientsCardsContainer.innerHTML = filtered.map(item => {
+          const isDeact = Boolean(item.isDeactivated || item.licenseType === 'deactivate' || item.days === 0);
+          const isExp = !isDeact && item.expiresAt <= today;
 
-          let statusBadge;
-          if (isDeactivated) {
-            statusBadge = '<span class="chip chip-deactivated">🚫 Deactivated</span>';
-          } else if (isExpired) {
-            statusBadge = '<span class="chip chip-expired">Expired</span>';
-          } else {
-            statusBadge = '<span class="chip chip-active">Active</span>';
-          }
+          let badgeHtml = isDeact
+            ? '<span class="status-tag deactivated">🛑 Deactivated</span>'
+            : isExp
+            ? '<span class="status-tag expired">⚠️ Expired</span>'
+            : '<span class="status-tag active">✅ Active</span>';
 
           return `
-            <div class="license-card">
-              <div class="card-top">
+            <div class="key-card">
+              <div class="key-card-header">
                 <div>
-                  <div class="client-title">${escapeHtml(item.issuedTo || 'Unnamed Client')}</div>
-                  <div class="client-meta">
-                    ${item.contact ? `<span>📞 ${escapeHtml(item.contact)} · </span>` : ''}
-                    <span>Hardware ID: <code>${escapeHtml(item.deviceId || 'N/A')}</code></span>
+                  <div class="client-heading">${escapeHtml(item.issuedTo || 'Unnamed Client')}</div>
+                  <div class="client-subhead">
+                    ${item.contact ? `<span>📞 ${escapeHtml(item.contact)} • </span>` : ''}
+                    <span>Device ID: <code>${escapeHtml(item.deviceId || 'N/A')}</code></span>
                   </div>
                 </div>
-                <div class="chip-group">
-                  <span class="chip chip-type">${typeLabel}</span>
-                  ${statusBadge}
-                </div>
+                ${badgeHtml}
               </div>
 
-              <div class="key-row">
-                <span class="key-text">${escapeHtml(item.activationKey || item.key25Digit || 'N/A')}</span>
-                <button class="sm-btn" type="button" onclick="copyText('${escapeHtml(item.activationKey || '')}', 'Key copied!')">
+              <div class="key-strip">
+                <code>${escapeHtml(item.activationKey || 'N/A')}</code>
+                <button class="action-pill-btn primary" type="button" onclick="copyTextDirect('${escapeHtml(item.activationKey)}')">
                   Copy Key
                 </button>
               </div>
 
-              <div class="card-actions">
+              <div class="key-card-footer">
                 <div>
-                  <span>Issued: <b>${issuedDate}</b> · Expires: <b>${escapeHtml(item.expiresAt)}</b>${item.days ? ` (${item.days}d)` : ''}</span>
+                  Issued: <b>${item.issuedAt ? new Date(item.issuedAt).toLocaleDateString() : 'N/A'}</b> • Expires: <b>${escapeHtml(item.expiresAt)}</b>
                 </div>
-                <div class="action-btns">
-                  <button class="secondary sm-btn" type="button" onclick="copyLicenseSummary('${escapeHtml(item.activationKey)}')">
-                    Copy Summary
-                  </button>
-                  ${!isDeactivated ? `
-                    <button class="warning sm-btn" type="button" onclick="deactivateLicenseKey('${escapeHtml(item.activationKey)}')">
-                      🚫 Deactivate
+                <div class="card-btns">
+                  ${!isDeact ? `
+                    <button class="action-pill-btn danger" type="button" onclick="deactivateByRow('${escapeHtml(item.activationKey)}', '${escapeHtml(item.deviceId || '')}')">
+                      🛑 Deactivate
                     </button>
-                  ` : ''}
-                  <button class="danger sm-btn" type="button" onclick="deleteLicense('${escapeHtml(item.activationKey)}')">
+                  ` : `
+                    <button class="action-pill-btn success" type="button" onclick="reactivateByRow('${escapeHtml(item.activationKey)}', '${escapeHtml(item.deviceId || '')}')">
+                      ✅ Re-activate
+                    </button>
+                  `}
+                  <button class="action-pill-btn" style="background:rgba(255,255,255,0.05);color:var(--text-muted);" type="button" onclick="deleteLicenseRecord('${escapeHtml(item.activationKey)}')">
                     Delete
                   </button>
                 </div>
@@ -1545,128 +1615,119 @@
         }).join('');
       }
 
-      function escapeHtml(str) {
-        return String(str || '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      window.copyText = async function(text, successMsg = 'Copied!') {
-        try {
-          await navigator.clipboard.writeText(text);
-          alert(successMsg);
-        } catch {
-          prompt('Copy this key:', text);
-        }
+      window.copyTextDirect = function(text) {
+        navigator.clipboard.writeText(text);
+        alert('Copied 25-digit key!');
       };
 
-      window.copyLicenseSummary = async function(key) {
-        const item = savedLicenses.find(l => l.activationKey === key || l.licenseId === key);
-        if (!item) return;
-        const isDeactivated = Boolean(item.isDeactivated || item.licenseType === 'deactivate');
-        const summary = [
-          `25-Digit License Key: ${item.activationKey}`,
-          `Status: ${isDeactivated ? 'DEACTIVATED / REVOKED' : 'ACTIVE'}`,
-          `Action: ${item.licenseType === 'renewal' ? 'Renewal' : 'New activation'}`,
-          `Issued To: ${item.issuedTo}`,
-          item.contact ? `Contact: ${item.contact}` : null,
-          `Hardware Terminal ID: ${item.deviceId}`,
-          `Expires: ${item.expiresAt}`,
-          item.days ? `Validity: ${item.days} Days` : null,
-          `Machine Locked & Anti-Clock Rollback Protected`
-        ].filter(Boolean).join('\n');
+      window.deactivateByRow = async function(key, devId) {
+        if (!confirm(`Are you sure you want to DEACTIVATE this license?\n\nKey: ${key}\nDevice: ${devId || 'Any'}\n\nClient machine will be locked immediately over the internet.`)) return;
+        const token = adminToken.value.trim() || prompt('Enter Admin Password:');
+        if (!token) return;
 
         try {
-          await navigator.clipboard.writeText(summary);
-          alert('Full client summary copied to clipboard!');
-        } catch {
-          prompt('Copy summary:', summary);
-        }
-      };
-
-      window.deactivateLicenseKey = async function(key) {
-        const item = savedLicenses.find(l => l.activationKey === key || l.licenseId === key);
-        const name = item?.issuedTo || 'this client';
-        if (!confirm(`Are you sure you want to DEACTIVATE the license key for "${name}"?\n\nThis will mark the client record as revoked and immediately lock their software terminal.`)) {
-          return;
-        }
-
-        let token = adminToken.value.trim();
-        if (!token) {
-          token = prompt('Enter Admin Security Password to update this deactivation on the server:');
-          if (token) {
-            adminToken.value = token;
-            try { localStorage.setItem(TOKEN_STORAGE_KEY, token); } catch {}
-          }
-        }
-
-        const updated = savedLicenses.map(l => {
-          if (l.activationKey === key || l.licenseId === key) {
-            return { ...l, isDeactivated: true, deactivatedAt: new Date().toISOString() };
-          }
-          return l;
-        });
-        setLocalLicenses(updated);
-        renderSavedLicenses();
-
-        if (token) {
-          try {
-            const res = await fetch(getApiUrl('/api/licenses/deactivate'), {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ id: key })
-            });
+          const res = await fetch(getApiUrl('/api/licenses/deactivate'), {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: key, deviceId: devId })
+          });
+          if (res.ok) {
+            alert('✅ Deactivation recorded! Client machine will be locked.');
+            syncServerRecords();
+          } else {
             const data = await res.json();
-            if (res.ok) {
-              alert(`✅ License for "${name}" has been permanently DEACTIVATED on the server!\n\nThe client terminal will be immediately locked.`);
-            } else {
-              alert(`Saved locally as deactivated. Server notice: ${data.error || 'Server rejected token'}`);
-            }
-          } catch (e) {
-            alert(`Marked as deactivated in your browser list.\nNote: Could not reach backend server at ${getApiUrl('')} (${e.message}).`);
+            alert('Failed: ' + (data.error || 'Server error'));
           }
-        } else {
-          alert(`License for "${name}" is marked as deactivated locally. Please provide Admin Password to sync with server.`);
+        } catch (e) {
+          alert('Network Error: ' + e.message);
         }
       };
 
-      window.deleteLicense = deleteLicense;
+      window.reactivateByRow = async function(key, devId) {
+        if (!confirm(`Are you sure you want to RE-ACTIVATE this license?\n\nKey: ${key}`)) return;
+        const token = adminToken.value.trim() || prompt('Enter Admin Password:');
+        if (!token) return;
 
-      searchInput.addEventListener('input', renderSavedLicenses);
-      syncBtn.addEventListener('click', syncWithServer);
+        try {
+          const res = await fetch(getApiUrl('/api/licenses/reactivate'), {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: key, deviceId: devId })
+          });
+          if (res.ok) {
+            alert('✅ Re-activation successful!');
+            syncServerRecords();
+          } else {
+            const data = await res.json();
+            alert('Failed: ' + (data.error || 'Server error'));
+          }
+        } catch (e) {
+          alert('Network Error: ' + e.message);
+        }
+      };
+
+      window.deleteLicenseRecord = async function(key) {
+        if (!confirm('Are you sure you want to remove this record from your database?')) return;
+        const token = adminToken.value.trim();
+        try {
+          await fetch(getApiUrl(`/api/licenses?id=${encodeURIComponent(key)}`), {
+            method: 'DELETE',
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+          });
+        } catch {}
+        savedLicenses = savedLicenses.filter(l => l.activationKey !== key);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(savedLicenses)); } catch {}
+        renderClientsTable();
+        updateBadges();
+      };
+
+      searchClientsInput.addEventListener('input', renderClientsTable);
+      syncRecordsBtn.addEventListener('click', syncServerRecords);
 
       // Export CSV
       exportCsvBtn.addEventListener('click', () => {
         if (savedLicenses.length === 0) {
-          alert('No client records to export.');
+          alert('No records to export.');
           return;
         }
-        const headers = ['Issued To', 'Contact', 'Terminal Device ID', '25-Digit Key', 'License Type', 'Issued Date', 'Expires At'];
+        const headers = ['Client Name', 'Contact', 'Terminal Device ID', '25-Digit Key', 'Status', 'Expires At'];
         const rows = savedLicenses.map(l => [
           `"${(l.issuedTo || '').replace(/"/g, '""')}"`,
           `"${(l.contact || '').replace(/"/g, '""')}"`,
           `"${(l.deviceId || '').replace(/"/g, '""')}"`,
           `"${(l.activationKey || '').replace(/"/g, '""')}"`,
-          `"${l.licenseType || 'new'}"`,
-          `"${l.issuedAt || ''}"`,
+          `"${l.isDeactivated ? 'DEACTIVATED' : 'ACTIVE'}"`,
           `"${l.expiresAt || ''}"`
         ]);
-
-        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-        const encodedUri = encodeURI(csvContent);
+        const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        const encoded = encodeURI(csv);
         const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `lab_licenses_backup_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute('href', encoded);
+        link.setAttribute('download', `lab_licenses_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       });
+
+      function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+      }
+
+      // Initial boot
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) savedLicenses = JSON.parse(raw);
+      } catch {}
+      updateBadges();
+      fetchChatThreads();
     </script>
   </body>
 </html>
