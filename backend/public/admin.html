@@ -1162,13 +1162,13 @@
         if (activeChatClient) loadActiveConversation();
       });
 
-      // Background poll for chat threads every 4 seconds
+      // Real-time background poll for chat threads every 1.5 seconds
       setInterval(() => {
         fetchChatThreads();
         if (activeChatClient && !viewChat.hidden) {
           loadActiveConversation();
         }
-      }, 4000);
+      }, 1500);
 
       // Storage helpers
       function getLocalLicenses() {
