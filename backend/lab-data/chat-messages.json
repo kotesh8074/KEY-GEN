@@ -1,0 +1,15 @@
+[
+  {
+    "id": "msg_1793671512201_4ky7",
+    "clientId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "sender": "client",
+    "senderName": "ISSAC DIAGNOSTIC CENTER",
+    "text": "HI",
+    "timestamp": "2026-11-03T02:05:12.201Z",
+    "readByClient": true,
+    "readByDev": false,
+    "labName": "ISSAC DIAGNOSTIC CENTER",
+    "deviceId": "563AFCD2-5673-4D45-88A6-9AA11DE2513C",
+    "macAddress": "0C:9A:3C:A0:54:47"
+  }
+]

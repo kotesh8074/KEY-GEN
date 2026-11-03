@@ -104,6 +104,58 @@ async function deleteSavedLicenseRecord(licenseId) {
   }
 }
 
+// --- LIVE CHAT DATA PERSISTENCE ---
+const CHAT_FILE = join(directory, 'lab-data', 'chat-messages.json');
+
+async function loadChatMessages() {
+  try {
+    const raw = await readFile(CHAT_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+async function saveChatMessage(msg) {
+  try {
+    await mkdir(join(directory, 'lab-data'), { recursive: true });
+    const list = await loadChatMessages();
+    list.push(msg);
+    // Keep the latest 2000 messages
+    const trimmed = list.slice(-2000);
+    await writeFile(CHAT_FILE, JSON.stringify(trimmed, null, 2), 'utf8');
+    return trimmed;
+  } catch (err) {
+    console.error('Error saving chat message:', err);
+    return [];
+  }
+}
+
+async function markChatRead(clientId, reader) {
+  try {
+    const list = await loadChatMessages();
+    let updated = false;
+    for (const m of list) {
+      if (m.clientId === clientId) {
+        if (reader === 'developer' && !m.readByDev) {
+          m.readByDev = true;
+          updated = true;
+        } else if (reader === 'client' && !m.readByClient) {
+          m.readByClient = true;
+          updated = true;
+        }
+      }
+    }
+    if (updated) {
+      await writeFile(CHAT_FILE, JSON.stringify(list, null, 2), 'utf8');
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 function json(response, status, body) {
   response.writeHead(status, {
     'Access-Control-Allow-Origin': '*',
@@ -203,6 +255,85 @@ async function handleRequest(request, response) {
 
   if (request.method === 'GET' && url.pathname === '/health') {
     json(response, 200, { available: true });
+    return;
+  }
+
+  // --- LIVE CHAT API FOR DEVELOPER & CLIENT ---
+  if (request.method === 'GET' && url.pathname === '/api/chat/messages') {
+    const clientId = url.searchParams.get('clientId') || '';
+    const messages = await loadChatMessages();
+    const filtered = clientId ? messages.filter(m => m.clientId === clientId) : messages;
+    json(response, 200, { messages: filtered });
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/chat/threads') {
+    const messages = await loadChatMessages();
+    const map = new Map();
+    for (const m of messages) {
+      const cid = m.clientId || 'unknown';
+      if (!map.has(cid)) {
+        map.set(cid, {
+          clientId: cid,
+          labName: m.labName || 'Diagnostic Lab Client',
+          deviceId: m.deviceId || cid,
+          macAddress: m.macAddress || '',
+          lastMessage: m,
+          unreadCount: 0,
+          totalMessages: 0
+        });
+      }
+      const thread = map.get(cid);
+      thread.lastMessage = m;
+      thread.totalMessages++;
+      if (m.sender === 'client' && !m.readByDev) {
+        thread.unreadCount++;
+      }
+      if (m.labName) thread.labName = m.labName;
+      if (m.macAddress) thread.macAddress = m.macAddress;
+    }
+    const threads = Array.from(map.values()).sort((a, b) => {
+      const ta = new Date(a.lastMessage?.timestamp || 0).getTime();
+      const tb = new Date(b.lastMessage?.timestamp || 0).getTime();
+      return tb - ta;
+    });
+    json(response, 200, { threads });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat/send') {
+    const body = await readJson(request);
+    const { clientId, sender = 'client', text, senderName, labName, deviceId, macAddress } = body;
+    if (!text || !text.trim()) {
+      json(response, 400, { error: 'Message text is required.' });
+      return;
+    }
+    const cid = String(clientId || deviceId || 'anonymous').trim();
+    const msg = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      clientId: cid,
+      sender: sender === 'developer' ? 'developer' : 'client',
+      senderName: senderName || (sender === 'developer' ? 'Developer Support' : (labName || 'Lab Client')),
+      text: text.trim(),
+      timestamp: new Date().toISOString(),
+      readByClient: sender === 'client',
+      readByDev: sender === 'developer',
+      labName: labName || '',
+      deviceId: deviceId || cid,
+      macAddress: macAddress || ''
+    };
+    await saveChatMessage(msg);
+    json(response, 201, { success: true, message: msg });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat/read') {
+    const body = await readJson(request);
+    const { clientId, reader = 'client' } = body;
+    if (clientId) {
+      await markChatRead(clientId, reader);
+    }
+    json(response, 200, { success: true });
     return;
   }
 
@@ -330,6 +461,18 @@ async function handleRequest(request, response) {
     } catch (saveError) {
       console.error('Backup write error on backend:', saveError);
       json(response, 500, { error: `Failed to save backup: ${saveError.message}` });
+      return;
+    }
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/database/latest') {
+    try {
+      const localDataFile = join(directory, 'lab-data', 'database.json');
+      const content = await readFile(localDataFile, 'utf8');
+      json(response, 200, JSON.parse(content));
+      return;
+    } catch {
+      json(response, 404, { error: 'No database snapshot available' });
       return;
     }
   }

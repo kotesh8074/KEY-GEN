@@ -543,6 +543,188 @@
           text-align: center;
         }
       }
+
+      /* LIVE CLIENT CHAT STYLES */
+      .card.chat-wide {
+        max-width: 980px;
+      }
+      .chat-container {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 0;
+        height: 560px;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #f8fafc;
+        margin-top: 14px;
+      }
+      .chat-threads-col {
+        border-right: 1px solid #e2e8f0;
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+      }
+      .chat-threads-header {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .chat-threads-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+      }
+      .chat-thread-item {
+        padding: 10px 12px;
+        border-radius: 12px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1px solid transparent;
+      }
+      .chat-thread-item:hover {
+        background: #f1f5f9;
+      }
+      .chat-thread-item.active {
+        background: #e0f2fe;
+        border-color: #bae6fd;
+      }
+      .chat-thread-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .chat-thread-badge {
+        background: #ef4444;
+        color: #ffffff;
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 9999px;
+      }
+      .chat-thread-sub {
+        font-size: 0.7rem;
+        color: #64748b;
+        font-family: 'JetBrains Mono', monospace;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chat-thread-last {
+        font-size: 0.725rem;
+        color: #475569;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chat-main-col {
+        display: flex;
+        flex-direction: column;
+        background: #ffffff;
+      }
+      .chat-main-header {
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .chat-client-title {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      .chat-client-meta {
+        font-size: 0.7rem;
+        color: #64748b;
+        font-family: 'JetBrains Mono', monospace;
+        margin-top: 2px;
+      }
+      .chat-msg-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: #f8fafc;
+      }
+      .chat-bubble {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        position: relative;
+        word-break: break-word;
+      }
+      .chat-bubble.client {
+        align-self: flex-start;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
+        border-top-left-radius: 4px;
+      }
+      .chat-bubble.developer {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #0284c7, #4f46e5);
+        color: #ffffff;
+        border-top-right-radius: 4px;
+      }
+      .chat-bubble-meta {
+        font-size: 0.65rem;
+        opacity: 0.75;
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+      .chat-reply-bar {
+        padding: 12px 16px;
+        border-top: 1px solid #e2e8f0;
+        background: #ffffff;
+        display: flex;
+        gap: 8px;
+      }
+      .chat-reply-input {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.825rem;
+        resize: none;
+      }
+      .chat-reply-input:focus {
+        outline: none;
+        border-color: #0284c7;
+      }
+      .chat-send-btn {
+        padding: 0 18px;
+        border: 0;
+        border-radius: 10px;
+        background: #0284c7;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .chat-send-btn:hover {
+        background: #0369a1;
+      }
     </style>
   </head>
   <body>
@@ -556,6 +738,10 @@
           <button id="tab-mgr" class="tab-btn" type="button">
             <span>📋 Saved Client Keys</span>
             <span id="saved-count" class="tab-count">0</span>
+          </button>
+          <button id="tab-chat" class="tab-btn" type="button">
+            <span>💬 Live Support Chat</span>
+            <span id="chat-badge" class="tab-count" style="display:none;background:#ef4444;color:#fff;">0</span>
           </button>
         </div>
       </div>
@@ -675,6 +861,50 @@
           <!-- Dynamically populated -->
         </div>
       </div>
+
+      <!-- VIEW 3: LIVE CLIENT SUPPORT CHAT -->
+      <div id="view-chat" hidden>
+        <div class="header">
+          <h1>Live Client Support Chat</h1>
+          <p class="intro">Real-time two-way messaging with client laboratory terminals over the internet. View client device IDs, diagnose questions, and provide immediate assistance.</p>
+        </div>
+
+        <div class="chat-container">
+          <!-- Left Column: Connected Lab Clients -->
+          <div class="chat-threads-col">
+            <div class="chat-threads-header">
+              <span>Client Labs</span>
+              <button id="refresh-chat-btn" class="secondary" style="padding:2px 8px;font-size:0.7rem;cursor:pointer;" type="button">🔄 Refresh</button>
+            </div>
+            <div id="chat-threads-list" class="chat-threads-list">
+              <div class="empty-state" style="padding:24px 12px;">
+                <p>Loading active chats...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Active Conversation -->
+          <div class="chat-main-col">
+            <div id="chat-active-header" class="chat-main-header">
+              <div>
+                <div id="chat-header-title" class="chat-client-title">Select a Client Lab</div>
+                <div id="chat-header-meta" class="chat-client-meta">No client selected</div>
+              </div>
+            </div>
+
+            <div id="chat-msg-area" class="chat-msg-area">
+              <div class="empty-state" style="margin:auto;">
+                <p>Select a client from the left panel to view and reply to messages.</p>
+              </div>
+            </div>
+
+            <form id="chat-reply-form" class="chat-reply-bar" style="display:none;">
+              <textarea id="chat-reply-input" class="chat-reply-input" rows="1" placeholder="Type your reply to this client... (Enter to send)"></textarea>
+              <button id="chat-reply-send" class="chat-send-btn" type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+      </div>
     </main>
 
     <script>
@@ -692,9 +922,26 @@
       const mainCard = document.querySelector('#main-card');
       const tabGen = document.querySelector('#tab-gen');
       const tabMgr = document.querySelector('#tab-mgr');
+      const tabChat = document.querySelector('#tab-chat');
       const viewGen = document.querySelector('#view-generator');
       const viewMgr = document.querySelector('#view-manager');
+      const viewChat = document.querySelector('#view-chat');
       const savedCountBadge = document.querySelector('#saved-count');
+      const chatBadge = document.querySelector('#chat-badge');
+
+      // Live Chat Elements
+      const refreshChatBtn = document.querySelector('#refresh-chat-btn');
+      const chatThreadsList = document.querySelector('#chat-threads-list');
+      const chatHeaderTitle = document.querySelector('#chat-header-title');
+      const chatHeaderMeta = document.querySelector('#chat-header-meta');
+      const chatMsgArea = document.querySelector('#chat-msg-area');
+      const chatReplyForm = document.querySelector('#chat-reply-form');
+      const chatReplyInput = document.querySelector('#chat-reply-input');
+      const chatReplySend = document.querySelector('#chat-reply-send');
+
+      let activeChatClient = null;
+      let chatThreads = [];
+      let chatPollingTimer = null;
 
       const form = document.querySelector('#license-form');
       const adminToken = document.querySelector('#admin-token');
@@ -734,23 +981,194 @@
         switchTab('mgr');
         syncWithServer();
       });
+      tabChat.addEventListener('click', () => {
+        switchTab('chat');
+        fetchChatThreads();
+      });
 
       function switchTab(tab) {
-        if (tab === 'gen') {
-          tabGen.classList.add('active');
-          tabMgr.classList.remove('active');
-          viewGen.hidden = false;
-          viewMgr.hidden = true;
-          mainCard.classList.remove('wide');
-        } else {
-          tabGen.classList.remove('active');
-          tabMgr.classList.add('active');
-          viewGen.hidden = true;
-          viewMgr.hidden = false;
+        tabGen.classList.toggle('active', tab === 'gen');
+        tabMgr.classList.toggle('active', tab === 'mgr');
+        tabChat.classList.toggle('active', tab === 'chat');
+
+        viewGen.hidden = tab !== 'gen';
+        viewMgr.hidden = tab !== 'mgr';
+        viewChat.hidden = tab !== 'chat';
+
+        mainCard.classList.remove('wide', 'chat-wide');
+        if (tab === 'mgr') {
           mainCard.classList.add('wide');
           renderSavedLicenses();
+        } else if (tab === 'chat') {
+          mainCard.classList.add('chat-wide');
         }
       }
+
+      // Live Chat Functions
+      async function fetchChatThreads() {
+        try {
+          const res = await fetch(getApiUrl('/api/chat/threads'));
+          if (res.ok) {
+            const data = await res.json();
+            chatThreads = Array.isArray(data.threads) ? data.threads : [];
+            renderChatThreads();
+
+            // Total unread messages across all clients
+            const totalUnread = chatThreads.reduce((sum, t) => sum + (t.unreadCount || 0), 0);
+            if (totalUnread > 0) {
+              chatBadge.style.display = 'inline-flex';
+              chatBadge.textContent = String(totalUnread);
+            } else {
+              chatBadge.style.display = 'none';
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch chat threads:', err);
+        }
+      }
+
+      function renderChatThreads() {
+        if (chatThreads.length === 0) {
+          chatThreadsList.innerHTML = `
+            <div class="empty-state" style="padding:28px 12px;">
+              <p>No active client chats yet.</p>
+              <span style="font-size:0.75rem;color:#94a3b8;margin-top:4px;display:block;">When clients message via their app, they appear here.</span>
+            </div>
+          `;
+          return;
+        }
+
+        chatThreadsList.innerHTML = chatThreads.map(t => {
+          const isActive = activeChatClient && activeChatClient.clientId === t.clientId;
+          const timeStr = t.lastMessage?.timestamp
+            ? new Date(t.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+          return `
+            <div class="chat-thread-item ${isActive ? 'active' : ''}" onclick="selectChatClient('${t.clientId}')">
+              <div class="chat-thread-name">
+                <span style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.labName || 'Lab Client'}</span>
+                ${t.unreadCount > 0 ? `<span class="chat-thread-badge">${t.unreadCount}</span>` : `<span style="font-size:0.65rem;color:#94a3b8;">${timeStr}</span>`}
+              </div>
+              <div class="chat-thread-sub">DevID: ${t.deviceId ? t.deviceId.slice(0, 16) + '...' : t.clientId}</div>
+              <div class="chat-thread-last">${t.lastMessage ? (t.lastMessage.sender === 'developer' ? 'You: ' : '') + t.lastMessage.text : 'No messages'}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      async function selectChatClient(clientId) {
+        const client = chatThreads.find(t => t.clientId === clientId);
+        if (!client) return;
+        activeChatClient = client;
+        renderChatThreads();
+
+        chatHeaderTitle.textContent = client.labName || 'Diagnostic Lab Client';
+        chatHeaderMeta.textContent = `Device ID: ${client.deviceId || client.clientId} ${client.macAddress ? '• MAC: ' + client.macAddress : ''}`;
+        chatReplyForm.style.display = 'flex';
+
+        await loadActiveConversation();
+
+        // Mark as read on server
+        fetch(getApiUrl('/api/chat/read'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId: client.clientId, reader: 'developer' })
+        }).then(() => fetchChatThreads()).catch(() => {});
+      }
+
+      async function loadActiveConversation() {
+        if (!activeChatClient) return;
+        try {
+          const res = await fetch(getApiUrl(`/api/chat/messages?clientId=${encodeURIComponent(activeChatClient.clientId)}`));
+          if (res.ok) {
+            const data = await res.json();
+            const msgs = Array.isArray(data.messages) ? data.messages : [];
+            renderMessages(msgs);
+          }
+        } catch (err) {
+          console.error('Failed to load conversation:', err);
+        }
+      }
+
+      function renderMessages(msgs) {
+        if (msgs.length === 0) {
+          chatMsgArea.innerHTML = `
+            <div class="empty-state" style="margin:auto;">
+              <p>No messages in this conversation yet.</p>
+            </div>
+          `;
+          return;
+        }
+
+        chatMsgArea.innerHTML = msgs.map(m => {
+          const isDev = m.sender === 'developer';
+          const time = m.timestamp
+            ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+          return `
+            <div class="chat-bubble ${isDev ? 'developer' : 'client'}">
+              <div class="chat-bubble-meta">${isDev ? 'You (Developer)' : (m.senderName || 'Lab Client')} • ${time}</div>
+              <div>${escapeHtml(m.text)}</div>
+            </div>
+          `;
+        }).join('');
+
+        chatMsgArea.scrollTop = chatMsgArea.scrollHeight;
+      }
+
+      function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, function(m) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+      }
+
+      // Handle reply submission
+      chatReplyForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = chatReplyInput.value.trim();
+        if (!text || !activeChatClient) return;
+
+        chatReplyInput.value = '';
+        chatReplySend.disabled = true;
+
+        try {
+          const res = await fetch(getApiUrl('/api/chat/send'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientId: activeChatClient.clientId,
+              sender: 'developer',
+              senderName: 'Developer Support',
+              text: text,
+              labName: activeChatClient.labName,
+              deviceId: activeChatClient.deviceId
+            })
+          });
+
+          if (res.ok) {
+            await loadActiveConversation();
+            await fetchChatThreads();
+          }
+        } catch (err) {
+          alert('Failed to send reply: ' + err.message);
+        } finally {
+          chatReplySend.disabled = false;
+          chatReplyInput.focus();
+        }
+      });
+
+      refreshChatBtn.addEventListener('click', () => {
+        fetchChatThreads();
+        if (activeChatClient) loadActiveConversation();
+      });
+
+      // Background poll for chat threads every 4 seconds
+      setInterval(() => {
+        fetchChatThreads();
+        if (activeChatClient && !viewChat.hidden) {
+          loadActiveConversation();
+        }
+      }, 4000);
 
       // Storage helpers
       function getLocalLicenses() {
