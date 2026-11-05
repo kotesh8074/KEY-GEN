@@ -346,6 +346,96 @@ async function handleRequest(request, response) {
     }
   }
 
+  // CHATBOT & WHATSAPP SUPPORT API
+  const CHAT_DATA_FILE = join(directory, 'lab-data', 'chat-messages.json');
+
+  async function loadChatMessages() {
+    try {
+      const data = await readFile(CHAT_DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
+  }
+
+  async function saveChatMessages(messages) {
+    try {
+      await mkdir(join(directory, 'lab-data'), { recursive: true });
+      await writeFile(CHAT_DATA_FILE, JSON.stringify(messages, null, 2), 'utf8');
+    } catch (err) {
+      console.warn('Could not save chat messages:', err);
+    }
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/chat/messages') {
+    const clientId = url.searchParams.get('clientId') || '';
+    const messages = await loadChatMessages();
+    const filtered = clientId
+      ? messages.filter(m => !m.clientId || m.clientId === clientId)
+      : messages;
+    json(response, 200, { success: true, messages: filtered });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat/send') {
+    const body = await readJson(request);
+    const messages = await loadChatMessages();
+    const newMsg = {
+      id: body.id || ('msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+      clientId: body.clientId || '',
+      sender: body.sender || 'client',
+      senderName: body.senderName || 'Client',
+      text: body.text || '',
+      timestamp: body.timestamp || new Date().toISOString(),
+      readByClient: body.readByClient !== undefined ? body.readByClient : true,
+      readByDev: body.readByDev !== undefined ? body.readByDev : false,
+      labName: body.labName || '',
+      deviceId: body.deviceId || '',
+      macAddress: body.macAddress || ''
+    };
+    messages.push(newMsg);
+    if (messages.length > 500) messages.splice(0, messages.length - 500);
+    await saveChatMessages(messages);
+    json(response, 201, { success: true, message: newMsg });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat/read') {
+    const body = await readJson(request);
+    const clientId = body.clientId;
+    const reader = body.reader;
+    const messages = await loadChatMessages();
+    let updated = false;
+    for (const m of messages) {
+      if (!clientId || m.clientId === clientId) {
+        if (reader === 'developer' && !m.readByDev) {
+          m.readByDev = true;
+          updated = true;
+        } else if (reader === 'client' && !m.readByClient) {
+          m.readByClient = true;
+          updated = true;
+        }
+      }
+    }
+    if (updated) await saveChatMessages(messages);
+    json(response, 200, { success: true });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/chat/clear') {
+    const body = await readJson(request);
+    const clientId = body.clientId;
+    if (clientId) {
+      const messages = await loadChatMessages();
+      const remaining = messages.filter(m => m.clientId !== clientId);
+      await saveChatMessages(remaining);
+      json(response, 200, { success: true, cleared: true });
+      return;
+    }
+    json(response, 400, { error: 'clientId is required.' });
+    return;
+  }
+
   if (request.method === 'GET' && ['/', '/admin', '/admin/'].includes(url.pathname)) {
     const content = await readFile(join(directory, 'public', 'admin.html'));
     html(response, 200, content, 'text/html; charset=utf-8');
